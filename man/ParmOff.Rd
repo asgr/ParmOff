@@ -35,7 +35,7 @@ Environment; to be passed to \option{envir} argument of \code{\link{do.call}}.
 Logical; if TRUE (default) and \option{.func} has a \dots argument input then unmatched arguments will be passed on (on the implicit assumption these will be matched by a function within \option{.func}). If FALSE or \option{.func} has no \dots argument input then only remaining matching arguments will be passed into \option{.func}. This intervention happens last.
 }
   \item{.return}{
-Character scalar; if 'function' then the output of \code{\link{do.call}} on the target \option{.func} with the remaining current_args, returning the output only. If 'args' then the current_args are returned.
+Character scalar; if 'function' then the output of \code{\link{do.call}} on the target \option{.func} with the remaining current_args, returning the output only. If 'args' then a list with the current_args (that meet all the matching critera) and ignore_args (provided but not to be used) are returned.
 }
   \item{\dots}{
 Other arguments to be merged with \option{.args} and processed as discussed above.
@@ -71,7 +71,7 @@ ParmOff(plot, example_args, x=sin, xlab='Ignore This')
 #Ignore the col argument (if present, which it is):
 ParmOff(plot, example_args, .rem_args='col', x=sin, xlab='Ignore This')
 
-#Gget the final current_args and the removed input arguments:
+#Gget the current_args and the ignore_args lists:
 ParmOff(plot, example_args, .rem_args='col', x=sin, xlab='Ignore This', .return='args')
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
