@@ -2,6 +2,10 @@ ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .quote=TRU
                    .envir=parent.frame(), .pass_dots=TRUE, .return='function', ...){
   if(!is.function(.func)){stop('func must be a function!')}
 
+  if(.return == 'args' | .return == 'current_args'){
+    input_args = .args
+  }
+
   dots = list(...)
   if(!is.null(dots)){
     if(!is.null(.args)){
@@ -28,7 +32,7 @@ ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .quote=TRU
   if(.return == 'function'){
     return(do.call(what=.func, args=.args, quote=.quote, envir=.envir))
   }else if(.return == 'args' | .return == 'current_args'){
-    return(.args)
+    return(list(current_args = .args, rem_args = input_args[! names(input_args) %in% names(.args)]))
   }else{
     stop('return must be one of function / args!')
   }

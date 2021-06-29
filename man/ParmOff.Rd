@@ -71,8 +71,8 @@ ParmOff(plot, example_args, x=sin, xlab='Ignore This')
 #Ignore the col argument (if present, which it is):
 ParmOff(plot, example_args, .rem_args='col', x=sin, xlab='Ignore This')
 
-#Just get the final current_args:
-ParmOff(plot, example_args, x=sin, xlab='Ignore This', .return='args')
+#Gget the final current_args and the removed input arguments:
+ParmOff(plot, example_args, .rem_args='col', x=sin, xlab='Ignore This', .return='args')
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
