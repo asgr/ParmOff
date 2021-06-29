@@ -9,7 +9,7 @@ Simple interface to allow the user to pass complex lists of arguments into funct
 }
 \usage{
 ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL, .quote = TRUE,
-  .envir = parent.frame(), .pass_dots = TRUE, ...)
+  .envir = parent.frame(), .pass_dots = TRUE, .return = 'function', ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -34,6 +34,9 @@ Environment; to be passed to \option{envir} argument of \code{\link{do.call}}.
   \item{.pass_dots}{
 Logical; if TRUE (default) and \option{.func} has a \dots argument input then unmatched arguments will be passed on (on the implicit assumption these will be matched by a function within \option{.func}). If FALSE or \option{.func} has no \dots argument input then only remaining matching arguments will be passed into \option{.func}. This intervention happens last.
 }
+  \item{.return}{
+Character scalar; if 'function' then the output of \code{\link{do.call}} on the target \option{.func} with the remaining current_args, returning the output only. If 'args' then the current_args are returned.
+}
   \item{\dots}{
 Other arguments to be merged with \option{.args} and processed as discussed above.
 }
@@ -47,7 +50,7 @@ These events happen in this exact order:
   \item If \option{.use_args} is present then restrict current_args to these arguments.
   \item If \option{.rem_args} is present then remove these arguments from current_args.
   \item If \dots are not present in the arguments of \option{.func} or \option{.pass_dots}=FALSE then restrict the current_args list to only those arguments that appear in the \code{\link{formals}} of \option{.func}.
-  \item Run \code{\link{do.call}} on the target \option{.func} with the remaining current_args, returning the output only.
+  \item Return the output of \code{\link{do.call}} or the current_args (depending on the setting of \option{.return}.
 }
 }
 \value{
@@ -67,6 +70,9 @@ ParmOff(plot, example_args, x=sin, xlab='Ignore This')
 
 #Ignore the col argument (if present, which it is):
 ParmOff(plot, example_args, .rem_args='col', x=sin, xlab='Ignore This')
+
+#Just get the final current_args:
+ParmOff(plot, example_args, x=sin, xlab='Ignore This', .return='args')
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

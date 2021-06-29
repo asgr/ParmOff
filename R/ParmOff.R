@@ -1,5 +1,5 @@
 ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .quote=TRUE,
-                   .envir=parent.frame(), .pass_dots=TRUE, ...){
+                   .envir=parent.frame(), .pass_dots=TRUE, .return='function', ...){
   if(!is.function(.func)){stop('func must be a function!')}
 
   dots = list(...)
@@ -25,5 +25,11 @@ ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .quote=TRU
     }
   }
 
-  return(do.call(what=.func, args=.args, quote=.quote, envir=.envir))
+  if(.return == 'function'){
+    return(do.call(what=.func, args=.args, quote=.quote, envir=.envir))
+  }else if(.return == 'args' | .return == 'current_args'){
+    return(.args)
+  }else{
+    stop('return must be one of function / args!')
+  }
 }
