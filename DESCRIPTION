@@ -1,0 +1,10 @@
+Package: ParmOff
+Type: Package
+Title: Complex Argument Matching
+Version: 0.1.0
+Author: Aaron Robotham
+Maintainer: Aaron Robotham <aaron.robotham@uwa.edu.au>
+Description: Allows for highly flexible and generic function argument matching.
+License: LGPL-3
+Encoding: UTF-8
+LazyData: true
