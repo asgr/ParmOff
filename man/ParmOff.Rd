@@ -17,7 +17,7 @@ ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL, .quote = TRUE,
 Function; the function to be executed with provided arguments.
 }
   \item{.args}{
-List; arguments to potential be passed into \option{.func}.
+List; arguments to potential be passed into \option{.func}. If not a list, then it will be coerced to one (user needs to make sure this is appropriate, but usually useful if passing in something like a vector of parameters from a fit etc).
 }
   \item{.use_args}{
 Character vector; arguments in \option{.args} and \dots will be restricted to this set. This intervention happens first.

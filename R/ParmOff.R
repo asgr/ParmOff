@@ -2,6 +2,10 @@ ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .quote=TRU
                    .envir=parent.frame(), .pass_dots=TRUE, .return='function', ...){
   if(!is.function(.func)){stop('func must be a function!')}
 
+  if(!is.list(.args)){
+    .args = as.list(.args)
+  }
+
   if(.return == 'args'){
     input_args = .args
   }
