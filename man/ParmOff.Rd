@@ -8,8 +8,9 @@ Powerful Paramter Passing
 Simple interface to allow the user to pass complex lists of arguments into functions, with matching and mis-matching rules.
 }
 \usage{
-ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL, .quote = TRUE,
-  .envir = parent.frame(), .pass_dots = TRUE, .return = 'function', ...)
+ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL, .logged = NULL,
+  .strip = NULL, .quote = TRUE, .envir = parent.frame(), .pass_dots = TRUE,
+  .return = 'function', ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,13 +18,19 @@ ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL, .quote = TRUE,
 Function; the function to be executed with provided arguments.
 }
   \item{.args}{
-List; arguments to potential be passed into \option{.func}. If not a list, then it will be coerced to one (user needs to make sure this is appropriate, but usually useful if passing in something like a vector of parameters from a fit etc).
+List (or named vector); arguments to potential be passed into \option{.func}. If not a list, then it will be coerced to one with one element per entry (user needs to make sure this is appropriate and fully named, but usually useful if passing in something like a vector of scalar parameters from a fit etc).
 }
   \item{.use_args}{
-Character vector; arguments in \option{.args} and \dots will be restricted to this set. This intervention happens first.
+Character vector; arguments in \option{.args} and \dots will be restricted to this set. This intervention happens first. The name provided should be as per post-stripped (if \option{.strip} is provided).
 }
   \item{.rem_args}{
-Character vector; arguments in \option{.args} and \dots will have these arguments removed. This intervention happens second.
+Character vector; arguments in \option{.args} and \dots will have these arguments removed. This intervention happens second. The name/s provided should have \option{.strip} elements removed (if relevant).
+}
+  \item{.logged}{
+Character vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name provided should be as per post-stripped (if \option{.strip} is provided).
+}
+  \item{.strip}{
+Character vector; a string element to strip out of all \option{.args} names.
 }
   \item{.quote}{
 Logical; to be passed to \option{quote} argument of \code{\link{do.call}}. Leaving as TRUE is usually a good idea because debugging of large inputs is much easier.
@@ -45,13 +52,17 @@ Other arguments to be merged with \option{.args} and processed as discussed abov
 These events happen in this exact order:
 
 \enumerate{
-  \item If \option{.args} and \dots are both present then any arguments in \dots that match by name are removed (\option{.args} takes precendence).
+  \item \option{.args} has string elements of names removed if \option{.strip} is provided.
+  \item If \option{.args} and \dots are both present then any arguments in \dots that match by name are removed (\option{.args} takes precedence).
   \item Merge \option{.args} and \dots into one list (current_args).
+  \item current_args has names elements specided by \option{.logged} unlogged (using base 10).
   \item If \option{.use_args} is present then restrict current_args to these arguments.
   \item If \option{.rem_args} is present then remove these arguments from current_args.
   \item If \dots are not present in the arguments of \option{.func} or \option{.pass_dots}=FALSE then restrict the current_args list to only those arguments that appear in the \code{\link{formals}} of \option{.func}.
   \item Return the output of \code{\link{do.call}} or the current_args (depending on the setting of \option{.return}.
 }
+
+Whilst \option{.args} can be a vector input (see Examples), users need to be careful it is fully named and all of a common type (e.g. numeric in most cases). If in doubt, use a named list since this gives full control over the typing of each list element.
 }
 \value{
 Return of \option{.func} with whatever the remaining current_args are after the various layers of passing.
@@ -73,6 +84,14 @@ ParmOff(plot, example_args, .rem_args='col', x=sin, xlab='Ignore This')
 
 #Gget the current_args and the ignore_args lists:
 ParmOff(plot, example_args, .rem_args='col', x=sin, xlab='Ignore This', .return='args')
+
+#An example of a complex model (note for non complex .args you can use a named vector):
+model_ex = function(x,y,z){x * y + z}
+input = c(x=1, y=2, z=3, t=4) #the input to pass into .args (note 't' will be ignored)
+ParmOff(model_ex, input)
+
+#And now tagging argument 'y' to be unlogged:
+ParmOff(model_ex, input, .logged='y')
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

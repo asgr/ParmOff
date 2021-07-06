@@ -1,5 +1,6 @@
-ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .quote=TRUE,
-                   .envir=parent.frame(), .pass_dots=TRUE, .return='function', ...){
+ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .logged = NULL, .strip = NULL,
+                   .quote=TRUE, .envir=parent.frame(), .pass_dots=TRUE, .return='function',
+                   ...){
   if(!is.function(.func)){stop('func must be a function!')}
 
   if(!is.list(.args)){
@@ -10,12 +11,23 @@ ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .quote=TRU
     input_args = .args
   }
 
+  if(!is.null(.strip)){
+    names(.args) = sub(.strip, '', names(.args))
+  }
+
   dots = list(...)
-  if(!is.null(dots)){
+  if(length(dots) > 0){
     if(!is.null(.args)){
       dots = dots[! names(dots) %in% names(.args)]
     }
     .args = c(.args, dots)
+  }
+
+  if(!is.null(.logged)){
+    temp_logged = .args[.logged]
+    if(length(.args[.logged]) > 0){
+      .args[.logged] = relist(10^unlist(temp_logged), temp_logged)
+    }
   }
 
   if(!is.null(.use_args) & length(.args) > 1){
