@@ -63,6 +63,8 @@ These events happen in this exact order:
 }
 
 Whilst \option{.args} can be a vector input (see Examples), users need to be careful it is fully named and all of a common type (e.g. numeric in most cases). If in doubt, use a named list since this gives full control over the typing of each list element.
+
+It should be noted that for trivially fast functions, \code{ParmOff} add a lot of overhead (see Examples). It is generally designed for convenience working with complex and CPU intensive functions (ones that take seconds rather than microseconds to run).
 }
 \value{
 Return of \option{.func} with whatever the remaining current_args are after the various layers of passing.
@@ -92,6 +94,12 @@ ParmOff(model_ex, input)
 
 #And now tagging argument 'y' to be unlogged:
 ParmOff(model_ex, input, .logged='y')
+
+#Truth in advertising, because of the extra checking ParmOff slows down fast functions:
+
+system.time(for(i in 1:1e4){model_ex(input[1], input[2], input[3])})
+system.time(for(i in 1:1e4){do.call(model_ex, as.list(input)[1:3])})
+system.time(for(i in 1:1e4){ParmOff(model_ex, input)})
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
