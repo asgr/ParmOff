@@ -21,16 +21,16 @@ Function; the function to be executed with provided arguments.
 List (or named vector); arguments to potential be passed into \option{.func}. If not a list, then it will be coerced to one with one element per entry (user needs to make sure this is appropriate and fully named, but usually useful if passing in something like a vector of scalar parameters from a fit etc).
 }
   \item{.use_args}{
-Character vector; arguments in \option{.args} and \dots will be restricted to this set. This intervention happens first. The name provided should be as per post-stripped (if \option{.strip} is provided).
+Character vector; arguments in \option{.args} and \dots will be restricted to this set. This intervention happens first. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
 }
   \item{.rem_args}{
-Character vector; arguments in \option{.args} and \dots will have these arguments removed. This intervention happens second. The name/s provided should have \option{.strip} elements removed (if relevant).
+Character vector; arguments in \option{.args} and \dots will have these arguments removed. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
 }
   \item{.logged}{
-Character vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name provided should be as per post-stripped (if \option{.strip} is provided).
+Character vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
 }
   \item{.strip}{
-Character vector; a string element to strip out of all \option{.args} names.
+Character vector; a string element to strip out of all \option{.args} names. This intervention happens first.
 }
   \item{.quote}{
 Logical; to be passed to \option{quote} argument of \code{\link{do.call}}. Leaving as TRUE is usually a good idea because debugging of large inputs is much easier.
