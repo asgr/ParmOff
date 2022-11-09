@@ -2,7 +2,7 @@
 \alias{ParmOff}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{
-Powerful Paramter Passing
+Powerful Parameter Passing
 }
 \description{
 Simple interface to allow the user to pass complex lists of arguments into functions, with matching and mis-matching rules.
@@ -84,7 +84,7 @@ ParmOff(plot, example_args, x=sin, xlab='Ignore This')
 #Ignore the col argument (if present, which it is):
 ParmOff(plot, example_args, .rem_args='col', x=sin, xlab='Ignore This')
 
-#Gget the current_args and the ignore_args lists:
+#Get the current_args and the ignore_args lists:
 ParmOff(plot, example_args, .rem_args='col', x=sin, xlab='Ignore This', .return='args')
 
 #An example of a complex model (note for non complex .args you can use a named vector):
