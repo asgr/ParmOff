@@ -8,9 +8,10 @@ Powerful Parameter Passing
 Simple interface to allow the user to pass complex lists of arguments into functions, with matching and mis-matching rules.
 }
 \usage{
-ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL, .logged = NULL,
-  .lower = NULL, .upper = NULL, .strip = NULL, .quote = TRUE,
-  .envir = parent.frame(), .pass_dots = TRUE, .return = 'function', ...)
+ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
+  .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL, .quote = TRUE,
+  .envir = parent.frame(), .pass_dots = TRUE, .return = 'function',
+  .check = TRUE, .bound_raw = TRUE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -26,14 +27,14 @@ Character vector; arguments in \option{.args} and \dots will be restricted to th
   \item{.rem_args}{
 Character vector; arguments in \option{.args} and \dots will have these arguments removed. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
 }
-  \item{.logged}{
-Character vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
-}
   \item{.lower}{
-Named numeric vector or list; optional lower bounds for named arguments in \option{.args} and \dots. Arguments whose names appear in \option{.lower} will be clamped to at least that value. Clamping occurs after name-stripping and dot-merging, but before de-logging. Names should be as per post-stripped (if \option{.strip} is provided).
+Named numeric vector or list; optional lower bounds for named arguments in \option{.args} and \dots. Arguments whose names appear in \option{.lower} will be clamped to at least that value. Clamping occurs after name-stripping and dot-merging, but before de-logging if \option{.bound_raw} is TRUE, and after de-logging if \option{.bound_raw} is FALSE. Names should be as per post-stripped (if \option{.strip} is provided).
 }
   \item{.upper}{
-Named numeric vector or list; optional upper bounds for named arguments in \option{.args} and \dots. Arguments whose names appear in \option{.upper} will be clamped to at most that value. Applied after \option{.lower}. Names should be as per post-stripped (if \option{.strip} is provided).
+Named numeric vector or list; optional upper bounds for named arguments in \option{.args} and \dots. Arguments whose names appear in \option{.upper} will be clamped to at most that value. Clamping occurs after name-stripping and dot-merging, but before de-logging if \option{.bound_raw} is TRUE, and after de-logging if \option{.bound_raw} is FALSE. Applied after \option{.lower}. Names should be as per post-stripped (if \option{.strip} is provided).
+}
+  \item{.logged}{
+Character vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
 }
   \item{.strip}{
 Character vector; a string element to strip out of all \option{.args} names. This intervention happens first.
@@ -49,6 +50,12 @@ Logical; if TRUE (default) and \option{.func} has a \dots argument input then un
 }
   \item{.return}{
 Character scalar; if 'function' then the output of \code{\link{do.call}} on the target \option{.func} with the remaining current_args, returning the output only. If 'args' then a list with the current_args (that meet all the matching critera) and ignore_args (provided but not to be used) are returned.
+}
+  \item{.check}{
+Logical; should input argument checking be carried out? Obviously safer to say TRUE (default), but in speed critical cases you might want to set to FALSE.
+}
+  \item{.bound_raw}{
+Logical; should \option{.lower} and \option{.upper} bounds be applied pre de-logging (via \option{.logged}) i.e. TRUE (default), or after e-logging i.e. FALSE.
 }
   \item{\dots}{
 Other arguments to be merged with \option{.args} and processed as discussed above.
