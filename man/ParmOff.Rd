@@ -104,7 +104,7 @@ ParmOff(model_ex, input)
 ParmOff(model_ex, input, .logged='y')
 
 #Bound argument values before passing:
-ParmOff(model_ex, input, .lower=c(x=0, y=1), .upper=c(y=5, z=10))
+ParmOff(model_ex, input, .lower=c(x=0, y=0.5), .upper=c(y=1.5, z=2))
 
 #Bounding happens before de-logging, so bounds are in log10 space:
 ParmOff(model_ex, input, .logged='y', .lower=c(y=0), .upper=c(y=1))
@@ -112,8 +112,9 @@ ParmOff(model_ex, input, .logged='y', .lower=c(y=0), .upper=c(y=1))
 #Truth in advertising, because of the extra checking ParmOff slows down fast functions:
 
 system.time(for(i in 1:1e4){model_ex(input[1], input[2], input[3])})
-system.time(for(i in 1:1e4){do.call(model_ex, as.list(input)[1:3])})
-system.time(for(i in 1:1e4){ParmOff(model_ex, input)})
+arg_list = as.list(input)[1:3]
+system.time(for(i in 1:1e4){do.call(model_ex, arg_list)})
+system.time(for(i in 1:1e4){ParmOff(model_ex, arg_list)})
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

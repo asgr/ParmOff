@@ -1,8 +1,8 @@
 Package: ParmOff
 Type: Package
 Title: Complex Argument Matching
-Version: 0.1.2
-Date: 2022-02-04
+Version: 0.1.3
+Date: 2026-05-13
 Author: Aaron Robotham
 Maintainer: Aaron Robotham <aaron.robotham@uwa.edu.au>
 Description: Allows for highly flexible and generic function argument matching.
