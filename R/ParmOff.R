@@ -16,35 +16,36 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL, .log
     names(.args) = sub(.strip, '', names(.args))
   }
 
-  #arg names won't change from now
-  arg_names = names(.args)
-
-  if(!missing(...)){
-    dots = list(...)
+  dots = list(...)
+  if(length(dots) > 0){
     if(length(.args) > 0){
-      dots = dots[! names(dots) %in% arg_names]
+      dots = dots[! names(dots) %in% names(.args)]
     }
     .args = c(.args, dots)
-  }else{
-    .pass_dots = FALSE
   }
 
+  # arg_names computed after dot-merging so it reflects the full argument set
+  arg_names = names(.args)
+
   if(!is.null(.lower)){
-    shared = arg_names[arg_names %in% names(.lower)]
+    shared = intersect(arg_names, names(.lower))
     if(length(shared) > 0){
       .args[shared] = Map(pmax, .args[shared], .lower[shared])
     }
   }
 
   if(!is.null(.upper)){
-    shared = arg_names[arg_names %in% names(.upper)]
+    shared = intersect(arg_names, names(.upper))
     if(length(shared) > 0){
       .args[shared] = Map(pmin, .args[shared], .upper[shared])
     }
   }
 
   if(!is.null(.logged)){
-    .args[.logged] = lapply(.args[.logged], function(x) 10^x)
+    logged_present = intersect(.logged, arg_names)
+    if(length(logged_present) > 0){
+      .args[logged_present] = lapply(.args[logged_present], function(x) 10^x)
+    }
   }
 
   if(length(.args) > 0){
