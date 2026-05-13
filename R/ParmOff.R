@@ -30,6 +30,7 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     checkmate::assert_environment(.envir)
     checkmate::assert_flag(.pass_dots)
     checkmate::assert_choice(.return, c('function', 'args'))
+    checkmate::assert_flag(.bound_raw)
   }
   
   if(!is.list(.args)){

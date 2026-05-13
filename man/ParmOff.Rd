@@ -55,7 +55,7 @@ Character scalar; if 'function' then the output of \code{\link{do.call}} on the 
 Logical; should input argument checking be carried out? Obviously safer to say TRUE (default), but in speed critical cases you might want to set to FALSE.
 }
   \item{.bound_raw}{
-Logical; should \option{.lower} and \option{.upper} bounds be applied pre de-logging (via \option{.logged}) i.e. TRUE (default), or after e-logging i.e. FALSE.
+Logical; should \option{.lower} and \option{.upper} bounds be applied pre de-logging (via \option{.logged}) i.e. TRUE (default), or after de-logging i.e. FALSE.
 }
   \item{\dots}{
 Other arguments to be merged with \option{.args} and processed as discussed above.
@@ -68,9 +68,9 @@ These events happen in this exact order:
   \item \option{.args} has string elements of names removed if \option{.strip} is provided.
   \item If \option{.args} and \dots are both present then any arguments in \dots that match by name are removed (\option{.args} takes precedence).
   \item Merge \option{.args} and \dots into one list (current_args).
-  \item If \option{.lower} is provided, clamp named current_args to the specified minimum values.
-  \item If \option{.upper} is provided, clamp named current_args to the specified maximum values.
+  \item If \option{.bound_raw} is TRUE (default): if \option{.lower} is provided, clamp named current_args to the specified minimum values; if \option{.upper} is provided, clamp to the specified maximum values.
   \item current_args has named elements specified by \option{.logged} unlogged (using base 10).
+  \item If \option{.bound_raw} is FALSE: if \option{.lower} is provided, clamp named current_args to the specified minimum values; if \option{.upper} is provided, clamp to the specified maximum values.
   \item If \option{.use_args} is present then restrict current_args to these arguments.
   \item If \option{.rem_args} is present then remove these arguments from current_args.
   \item If \dots are not present in the arguments of \option{.func} or \option{.pass_dots}=FALSE then restrict the current_args list to only those arguments that appear in the \code{\link{formals}} of \option{.func}.

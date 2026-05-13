@@ -110,6 +110,26 @@ test_that(".envir must be an environment", {
                regexp = "Assertion")
 })
 
+test_that(".bound_raw must be a single logical flag", {
+  expect_error(ParmOff(f_xyz, list(x=1,y=2,z=3), .bound_raw = "yes"),
+               regexp = "Assertion")
+  expect_error(ParmOff(f_xyz, list(x=1,y=2,z=3), .bound_raw = 1),
+               regexp = "Assertion")
+  expect_error(ParmOff(f_xyz, list(x=1,y=2,z=3), .bound_raw = c(TRUE, FALSE)),
+               regexp = "Assertion")
+})
+
+test_that(".check=FALSE bypasses checkmate validation", {
+  # With .check=TRUE (default), invalid .use_args type throws Assertion error
+  expect_error(ParmOff(f_none, list(), .use_args = 1L, .check = TRUE),
+               regexp = "Assertion")
+  # With .check=FALSE, the same invalid type is accepted; the call proceeds
+  # (.use_args=1L effectively acts as an empty selector since 0 names match)
+  expect_equal(ParmOff(f_none, list(), .use_args = 1L, .check = FALSE), 42L)
+  # Disabling checks is faster but unsafe -- valid inputs still work correctly
+  expect_equal(ParmOff(f_xyz, list(x=1, y=2, z=3), .check = FALSE), 5)
+})
+
 # ---------------------------------------------------------------------------
 # Basic functionality --------------------------------------------------------
 # ---------------------------------------------------------------------------
@@ -317,6 +337,66 @@ test_that(".lower == .upper clamps to exact value", {
   )
 })
 
+# .bound_raw=FALSE: bounds applied AFTER de-logging (bounds in real-number space)
+
+test_that(".bound_raw=FALSE applies .lower in real space after de-logging", {
+  # y=0 (log10) -> 10^0=1; lower y=2 (real) -> pmax(1,2)=2; f_xy(1,2)=3
+  expect_equal(
+    ParmOff(f_xy, list(x=1, y=0), .logged="y", .lower=c(y=2), .bound_raw=FALSE),
+    3
+  )
+})
+
+test_that(".bound_raw=FALSE applies .upper in real space after de-logging", {
+  # y=2 (log10) -> 10^2=100; upper y=5 (real) -> pmin(100,5)=5; f_xy(1,5)=6
+  expect_equal(
+    ParmOff(f_xy, list(x=1, y=2), .logged="y", .upper=c(y=5), .bound_raw=FALSE),
+    6
+  )
+})
+
+test_that(".bound_raw=FALSE: satisfied bound in real space is a no-op", {
+  # y=1 (log10) -> 10^1=10; lower y=5 (real) -> pmax(10,5)=10; f_xy(1,10)=11
+  expect_equal(
+    ParmOff(f_xy, list(x=1, y=1), .logged="y", .lower=c(y=5), .bound_raw=FALSE),
+    11
+  )
+})
+
+test_that(".bound_raw=FALSE and .bound_raw=TRUE differ when bound crosses log scale", {
+  # y=0 (log10), lower=1
+  # .bound_raw=TRUE (bound in log space): pmax(0,1)=1 -> 10^1=10; f_xy(1,10)=11
+  # .bound_raw=FALSE (bound in real space): 10^0=1 -> pmax(1,1)=1; f_xy(1,1)=2
+  expect_equal(
+    ParmOff(f_xy, list(x=1, y=0), .logged="y", .lower=c(y=1), .bound_raw=TRUE),
+    11
+  )
+  expect_equal(
+    ParmOff(f_xy, list(x=1, y=0), .logged="y", .lower=c(y=1), .bound_raw=FALSE),
+    2
+  )
+})
+
+test_that(".bound_raw=FALSE without .logged behaves identically to TRUE", {
+  # No de-logging, so bound_raw has no effect on the outcome
+  expect_equal(
+    ParmOff(f_xyz, list(x=0, y=10, z=3), .lower=c(x=1), .upper=c(y=2), .bound_raw=FALSE),
+    5
+  )
+  expect_equal(
+    ParmOff(f_xyz, list(x=0, y=10, z=3), .lower=c(x=1), .upper=c(y=2), .bound_raw=TRUE),
+    5
+  )
+})
+
+test_that(".bound_raw=FALSE applied to ... argument (real-space lower)", {
+  # z via ...; z=2 (log10) -> 10^2=100; lower z=5 (real) -> pmax(100,5)=100; f(1,2,100)=102
+  expect_equal(
+    ParmOff(f_xyz, list(x=1, y=2), .logged="z", .lower=c(z=5), .bound_raw=FALSE, z=2),
+    102
+  )
+})
+
 # ---------------------------------------------------------------------------
 # ... (dots) merging ---------------------------------------------------------
 # ---------------------------------------------------------------------------
@@ -477,6 +557,19 @@ test_that("multiple feature interaction: .strip + .logged + .lower + .use_args",
     ParmOff(f_xy, list(p.x=1, p.y=0, p.z=3),
             .strip="p\\.", .logged="y", .lower=c(y=1), .use_args=c("x","y")),
     11
+  )
+})
+
+test_that("multiple feature interaction: .strip + .logged + .lower + .use_args + .bound_raw=FALSE", {
+  # Names: p.x=1, p.y=0, p.z=3 -> strip "p\\." -> x=1, y=0, z=3
+  # .logged="y" first: y=0 -> 10^0=1
+  # .lower=c(y=1) in real space: pmax(1,1)=1 (no change since 10^0=1=lower)
+  # .use_args=c("x","y"): drop z -> f_xy(1, 1) = 2
+  expect_equal(
+    ParmOff(f_xy, list(p.x=1, p.y=0, p.z=3),
+            .strip="p\\.", .logged="y", .lower=c(y=1), .use_args=c("x","y"),
+            .bound_raw=FALSE),
+    2
   )
 })
 
