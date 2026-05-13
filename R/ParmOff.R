@@ -2,7 +2,33 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL, .log
                    .lower = NULL, .upper = NULL, .strip = NULL, .quote = TRUE,
                    .envir = parent.frame(), .pass_dots = TRUE, .return = 'function',
                    ...){
-  if(!is.function(.func)){stop('func must be a function!')}
+  checkmate::assert_function(.func)
+  checkmate::assert(
+    checkmate::check_null(.args),
+    checkmate::check_list(.args),
+    checkmate::check_atomic_vector(.args),
+    .var.name = '.args'
+  )
+  checkmate::assert_character(.use_args, null.ok = TRUE)
+  checkmate::assert_character(.rem_args, null.ok = TRUE)
+  checkmate::assert_character(.logged, null.ok = TRUE)
+  checkmate::assert(
+    checkmate::check_null(.lower),
+    checkmate::check_numeric(.lower, names = 'unique'),
+    checkmate::check_list(.lower, names = 'unique'),
+    .var.name = '.lower'
+  )
+  checkmate::assert(
+    checkmate::check_null(.upper),
+    checkmate::check_numeric(.upper, names = 'unique'),
+    checkmate::check_list(.upper, names = 'unique'),
+    .var.name = '.upper'
+  )
+  checkmate::assert_string(.strip, null.ok = TRUE)
+  checkmate::assert_flag(.quote)
+  checkmate::assert_environment(.envir)
+  checkmate::assert_flag(.pass_dots)
+  checkmate::assert_choice(.return, c('function', 'args'))
 
   if(!is.list(.args)){
     .args = as.list(.args)
