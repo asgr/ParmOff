@@ -1,4 +1,5 @@
-ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .logged = NULL, .strip = NULL,
+ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .logged = NULL,
+                   .lower = NULL, .upper = NULL, .strip = NULL,
                    .quote=TRUE, .envir=parent.frame(), .pass_dots=TRUE, .return='function',
                    ...){
   if(!is.function(.func)){stop('func must be a function!')}
@@ -7,9 +8,7 @@ ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .logged = 
     .args = as.list(.args)
   }
 
-  if(.return == 'args'){
-    input_args = .args
-  }
+  input_args = .args
 
   if(!is.null(.strip)){
     names(.args) = sub(.strip, '', names(.args))
@@ -17,31 +16,46 @@ ParmOff = function(.func, .args=NULL, .use_args=NULL, .rem_args=NULL, .logged = 
 
   dots = list(...)
   if(length(dots) > 0){
-    if(!is.null(.args)){
+    if(length(.args) > 0){
       dots = dots[! names(dots) %in% names(.args)]
     }
     .args = c(.args, dots)
   }
 
-  if(!is.null(.logged)){
-    temp_logged = .args[.logged]
-    if(length(.args[.logged]) > 0){
-      .args[.logged] = relist(10^unlist(temp_logged), temp_logged)
+  if(!is.null(.lower)){
+    shared = intersect(names(.args), names(.lower))
+    if(length(shared) > 0){
+      .args[shared] = mapply(function(v, lo) max(v, lo), .args[shared], .lower[shared], SIMPLIFY = FALSE)
     }
   }
 
-  if(!is.null(.use_args) & length(.args) > 1){
-    .args = .args[names(.args) %in% .use_args]
+  if(!is.null(.upper)){
+    shared = intersect(names(.args), names(.upper))
+    if(length(shared) > 0){
+      .args[shared] = mapply(function(v, hi) min(v, hi), .args[shared], .upper[shared], SIMPLIFY = FALSE)
+    }
   }
 
-  if(!is.null(.rem_args) & length(.args) > 1){
-    .args = .args[! names(.args) %in% .rem_args]
+  if(!is.null(.logged)){
+    .args[.logged] = lapply(.args[.logged], function(x) 10^x)
   }
 
-  if(length(.args) > 1){
+  if(length(.args) > 0){
+    arg_names = names(.args)
+
+    if(!is.null(.use_args)){
+      .args = .args[arg_names %in% .use_args]
+      arg_names = names(.args)
+    }
+
+    if(!is.null(.rem_args)){
+      .args = .args[! arg_names %in% .rem_args]
+      arg_names = names(.args)
+    }
+
     .func_formals = names(formals(.func))
-    if((! '...' %in% .func_formals) | .pass_dots == FALSE){
-      .args = .args[names(.args) %in% .func_formals]
+    if(!'...' %in% .func_formals || !.pass_dots){
+      .args = .args[arg_names %in% .func_formals]
     }
   }
 

@@ -9,8 +9,8 @@ Simple interface to allow the user to pass complex lists of arguments into funct
 }
 \usage{
 ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL, .logged = NULL,
-  .strip = NULL, .quote = TRUE, .envir = parent.frame(), .pass_dots = TRUE,
-  .return = 'function', ...)
+  .lower = NULL, .upper = NULL, .strip = NULL, .quote = TRUE,
+  .envir = parent.frame(), .pass_dots = TRUE, .return = 'function', ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -28,6 +28,12 @@ Character vector; arguments in \option{.args} and \dots will have these argument
 }
   \item{.logged}{
 Character vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
+}
+  \item{.lower}{
+Named numeric vector or list; optional lower bounds for named arguments in \option{.args} and \dots. Arguments whose names appear in \option{.lower} will be clamped to at least that value. Clamping occurs after name-stripping and dot-merging, but before de-logging. Names should be as per post-stripped (if \option{.strip} is provided).
+}
+  \item{.upper}{
+Named numeric vector or list; optional upper bounds for named arguments in \option{.args} and \dots. Arguments whose names appear in \option{.upper} will be clamped to at most that value. Applied after \option{.lower}. Names should be as per post-stripped (if \option{.strip} is provided).
 }
   \item{.strip}{
 Character vector; a string element to strip out of all \option{.args} names. This intervention happens first.
@@ -55,7 +61,9 @@ These events happen in this exact order:
   \item \option{.args} has string elements of names removed if \option{.strip} is provided.
   \item If \option{.args} and \dots are both present then any arguments in \dots that match by name are removed (\option{.args} takes precedence).
   \item Merge \option{.args} and \dots into one list (current_args).
-  \item current_args has names elements specided by \option{.logged} unlogged (using base 10).
+  \item If \option{.lower} is provided, clamp named current_args to the specified minimum values.
+  \item If \option{.upper} is provided, clamp named current_args to the specified maximum values.
+  \item current_args has named elements specified by \option{.logged} unlogged (using base 10).
   \item If \option{.use_args} is present then restrict current_args to these arguments.
   \item If \option{.rem_args} is present then remove these arguments from current_args.
   \item If \dots are not present in the arguments of \option{.func} or \option{.pass_dots}=FALSE then restrict the current_args list to only those arguments that appear in the \code{\link{formals}} of \option{.func}.
@@ -94,6 +102,12 @@ ParmOff(model_ex, input)
 
 #And now tagging argument 'y' to be unlogged:
 ParmOff(model_ex, input, .logged='y')
+
+#Bound argument values before passing:
+ParmOff(model_ex, input, .lower=c(x=0, y=1), .upper=c(y=5, z=10))
+
+#Bounding happens before de-logging, so bounds are in log10 space:
+ParmOff(model_ex, input, .logged='y', .lower=c(y=0), .upper=c(y=1))
 
 #Truth in advertising, because of the extra checking ParmOff slows down fast functions:
 
