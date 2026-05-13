@@ -8,9 +8,10 @@ Powerful Parameter Passing
 Simple interface to allow the user to pass complex lists of arguments into functions, with matching and mis-matching rules.
 }
 \usage{
-ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL, .logged = NULL,
-  .strip = NULL, .quote = TRUE, .envir = parent.frame(), .pass_dots = TRUE,
-  .return = 'function', ...)
+ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
+  .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL, .quote = TRUE,
+  .envir = parent.frame(), .pass_dots = TRUE, .return = 'function',
+  .check = TRUE, .bound_raw = TRUE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -25,6 +26,12 @@ Character vector; arguments in \option{.args} and \dots will be restricted to th
 }
   \item{.rem_args}{
 Character vector; arguments in \option{.args} and \dots will have these arguments removed. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
+}
+  \item{.lower}{
+Named numeric vector or list; optional lower bounds for named arguments in \option{.args} and \dots. Arguments whose names appear in \option{.lower} will be clamped to at least that value. Clamping occurs after name-stripping and dot-merging, but before de-logging if \option{.bound_raw} is TRUE, and after de-logging if \option{.bound_raw} is FALSE. Names should be as per post-stripped (if \option{.strip} is provided).
+}
+  \item{.upper}{
+Named numeric vector or list; optional upper bounds for named arguments in \option{.args} and \dots. Arguments whose names appear in \option{.upper} will be clamped to at most that value. Clamping occurs after name-stripping and dot-merging, but before de-logging if \option{.bound_raw} is TRUE, and after de-logging if \option{.bound_raw} is FALSE. Applied after \option{.lower}. Names should be as per post-stripped (if \option{.strip} is provided).
 }
   \item{.logged}{
 Character vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
@@ -44,6 +51,12 @@ Logical; if TRUE (default) and \option{.func} has a \dots argument input then un
   \item{.return}{
 Character scalar; if 'function' then the output of \code{\link{do.call}} on the target \option{.func} with the remaining current_args, returning the output only. If 'args' then a list with the current_args (that meet all the matching critera) and ignore_args (provided but not to be used) are returned.
 }
+  \item{.check}{
+Logical; should input argument checking be carried out? Obviously safer to say TRUE (default), but in speed critical cases you might want to set to FALSE.
+}
+  \item{.bound_raw}{
+Logical; should \option{.lower} and \option{.upper} bounds be applied pre de-logging (via \option{.logged}) i.e. TRUE (default), or after de-logging i.e. FALSE.
+}
   \item{\dots}{
 Other arguments to be merged with \option{.args} and processed as discussed above.
 }
@@ -55,7 +68,9 @@ These events happen in this exact order:
   \item \option{.args} has string elements of names removed if \option{.strip} is provided.
   \item If \option{.args} and \dots are both present then any arguments in \dots that match by name are removed (\option{.args} takes precedence).
   \item Merge \option{.args} and \dots into one list (current_args).
-  \item current_args has names elements specided by \option{.logged} unlogged (using base 10).
+  \item If \option{.bound_raw} is TRUE (default): if \option{.lower} is provided, clamp named current_args to the specified minimum values; if \option{.upper} is provided, clamp to the specified maximum values.
+  \item current_args has named elements specified by \option{.logged} unlogged (using base 10).
+  \item If \option{.bound_raw} is FALSE: if \option{.lower} is provided, clamp named current_args to the specified minimum values; if \option{.upper} is provided, clamp to the specified maximum values.
   \item If \option{.use_args} is present then restrict current_args to these arguments.
   \item If \option{.rem_args} is present then remove these arguments from current_args.
   \item If \dots are not present in the arguments of \option{.func} or \option{.pass_dots}=FALSE then restrict the current_args list to only those arguments that appear in the \code{\link{formals}} of \option{.func}.
@@ -95,11 +110,18 @@ ParmOff(model_ex, input)
 #And now tagging argument 'y' to be unlogged:
 ParmOff(model_ex, input, .logged='y')
 
+#Bound argument values before passing:
+ParmOff(model_ex, input, .lower=c(x=0, y=0.5), .upper=c(y=1.5, z=2))
+
+#Bounding happens before de-logging, so bounds are in log10 space:
+ParmOff(model_ex, input, .logged='y', .lower=c(y=0), .upper=c(y=1))
+
 #Truth in advertising, because of the extra checking ParmOff slows down fast functions:
 
 system.time(for(i in 1:1e4){model_ex(input[1], input[2], input[3])})
-system.time(for(i in 1:1e4){do.call(model_ex, as.list(input)[1:3])})
-system.time(for(i in 1:1e4){ParmOff(model_ex, input)})
+arg_list = as.list(input)[1:3]
+system.time(for(i in 1:1e4){do.call(model_ex, arg_list)})
+system.time(for(i in 1:1e4){ParmOff(model_ex, arg_list)})
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):
