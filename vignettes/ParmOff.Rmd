@@ -1,0 +1,406 @@
+---
+title: "ParmOff: Powerful Parameter Passing"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{ParmOff: Powerful Parameter Passing}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+library(ParmOff)
+```
+
+## Overview
+
+`ParmOff` solves a common pain point in R programming: you have a large named
+vector or list of parameters, and you want to call a function with only the
+subset it understands — without writing boilerplate code to select, rename,
+clamp, or transform arguments by hand.
+
+A typical workflow looks like this:
+
+1. You collect a set of named parameters (e.g. from an optimiser, a
+   configuration file, or a fit result).
+2. The target function only uses *some* of those parameters, and you may want
+   to restrict, rename, log-transform, or bound them before the call.
+3. `ParmOff` handles all of that in a single, composable call.
+
+Processing steps happen in this fixed order:
+
+1. Strip a prefix/suffix from argument names (`.strip`).
+2. Merge `...` into `.args`, with `.args` taking precedence on name conflicts.
+3. Clamp arguments to minimum / maximum values (`.lower`, `.upper`) — *before*
+   de-logging when `.bound_raw = TRUE` (default), *after* when
+   `.bound_raw = FALSE`.
+4. De-log arguments stored in log₁₀ space (`.logged`).
+5. Restrict to a named subset (`.use_args`).
+6. Remove named arguments (`.rem_args`).
+7. Drop arguments not in the function's formals unless the function accepts
+   `...` and `.pass_dots = TRUE`.
+8. Call the function or return the processed argument list (`.return`).
+
+---
+
+## 1  The basics
+
+### 1.1  Dropping extra arguments automatically
+
+```{r basics-drop}
+model <- function(x, y, z) x * y + z
+
+# 't' is not a formal of model — ParmOff silently drops it
+params <- c(x = 1, y = 2, z = 3, t = 4)
+ParmOff(model, params)
+```
+
+### 1.2  Named vector vs. named list
+
+Both work.  A named vector is coerced to a list element-by-element, which is
+fine as long as all values share a common type.  Use a named list when values
+have mixed types.
+
+```{r basics-list-vs-vec}
+# Named numeric vector
+ParmOff(model, c(x = 2, y = 3, z = 1))
+
+# Named list — preferred when types differ
+ParmOff(model, list(x = 2L, y = 3.0, z = TRUE))
+```
+
+### 1.3  Mixing `.args` and `...`
+
+Arguments passed via `...` are merged with `.args`, but `.args` always wins on
+duplicates.
+
+```{r basics-dots}
+# z is in .args; the conflicting z in ... is ignored
+ParmOff(model, list(x = 1, y = 2, z = 3), z = 99)
+
+# z is missing from .args but supplied via ...
+ParmOff(model, list(x = 1, y = 2), z = 3)
+```
+
+---
+
+## 2  Selecting and removing arguments
+
+### 2.1  `.use_args` — allowlist
+
+```{r use-args}
+f <- function(x, y) x + y
+
+# Only x and y are passed; the extra z never reaches f
+ParmOff(f, list(x = 2, y = 3, z = 99), .use_args = c("x", "y"))
+```
+
+### 2.2  `.rem_args` — blocklist
+
+```{r rem-args}
+# Remove z before passing; f receives x and y only
+f_xyz <- function(x, y, z) x * y + z
+ParmOff(f_xyz, list(x = 2, y = 3, z = 99), .rem_args = "z")
+```
+
+### 2.3  Combining both
+
+`.use_args` is applied first (keep only these), then `.rem_args` (remove
+these from what's left).
+
+```{r use-rem-combined}
+# Keep x, y, z — then remove z
+ParmOff(f, list(x = 2, y = 3, z = 99, w = 0),
+        .use_args = c("x", "y", "z"), .rem_args = "z")
+```
+
+---
+
+## 3  Stripping name prefixes / suffixes
+
+When parameters come from an optimiser or a configuration system they often
+carry a common prefix.  `.strip` is a regex applied to all argument names via
+`sub()`.
+
+```{r strip}
+# A parameter vector from, say, a Bayesian sampler with a "fit." prefix
+fit_params <- c(fit.x = 1, fit.y = 2, fit.z = 3, fit.t = 4)
+ParmOff(model, fit_params, .strip = "fit\\.")
+```
+
+`.strip` happens *before* filtering, so `.use_args` / `.rem_args` work on the
+post-stripped names.
+
+```{r strip-with-use}
+ParmOff(f, list(p.x = 2, p.y = 3, p.z = 99),
+        .strip = "p\\.", .use_args = c("x", "y"))
+```
+
+---
+
+## 4  Log-transformed parameters (`.logged`)
+
+Optimisers work best when parameters live on an unbounded real line.  Scale
+parameters (standard deviations, amplitudes, etc.) are naturally expressed in
+log₁₀ space during fitting.  `.logged` names arguments that are stored as
+log₁₀ values and should be back-transformed before being passed to the target
+function.
+
+```{r logged}
+# y is stored as log10(2) ≈ 0.301; 10^0.301 ≈ 2
+ParmOff(model, list(x = 1, y = log10(2), z = 3), .logged = "y")
+```
+
+```{r logged-multi}
+# Both x and y are in log10 space
+ParmOff(model, list(x = 1, y = 1, z = 3), .logged = c("x", "y"))
+# x = 10^1 = 10, y = 10^1 = 10 → 10*10 + 3 = 103
+```
+
+---
+
+## 5  Bounding parameters (`.lower`, `.upper`)
+
+`.lower` and `.upper` are named numeric vectors (or lists) that clamp
+individual arguments.  Only names present in the current argument list are
+affected; extra names in the bound vectors are silently ignored.
+
+```{r bounds-basic}
+# Clamp y upward, z downward
+ParmOff(model, list(x = 1, y = 0.1, z = 15),
+        .lower = c(y = 1), .upper = c(z = 10))
+# y was 0.1, clamped to 1  → 1*1 + 10 = 11
+```
+
+### 5.1  `.bound_raw = TRUE` (default) — bounds in log₁₀ space
+
+When parameters are log-transformed, you usually want to express bounds in the
+*same* space as the optimiser sees them — i.e. in log₁₀ units.  The default
+`bound_raw = TRUE` applies bounds *before* de-logging.
+
+```{r bounds-raw-true}
+# y is in log10 space; clamp to [-1, 1] before back-transforming
+# log10(y) clamped to 1 → 10^1 = 10
+ParmOff(model, list(x = 1, y = 2, z = 3),
+        .logged = "y", .lower = c(y = -1), .upper = c(y = 1))
+# Result: 1 * 10 + 3 = 13
+```
+
+### 5.2  `.bound_raw = FALSE` — bounds in real space
+
+When you instead want to bound the *physical* value after back-transformation,
+set `.bound_raw = FALSE`.
+
+```{r bounds-raw-false}
+# y = 2 (log10) → 10^2 = 100; upper 5 (real) → clamp to 5
+# Result: 1 * 5 + 3 = 8
+ParmOff(model, list(x = 1, y = 2, z = 3),
+        .logged = "y", .upper = c(y = 5), .bound_raw = FALSE)
+```
+
+---
+
+## 6  Real-world example: fitting a Normal distribution with `optim`
+
+A common pattern is to fit a parametric model using `optim`.  The parameter
+vector passed to the objective function needs to be forwarded cleanly to the
+likelihood function, with scale parameters back-transformed from log space.
+
+```{r dnorm-optim}
+set.seed(42)
+data_obs <- rnorm(200, mean = 5, sd = 2)
+
+# Negative log-likelihood; 'sd' is optimised in log10 space
+neg_ll <- function(par, data) {
+  -sum(dnorm(data, mean = par["mean"], sd = 10^par["log_sd"], log = TRUE))
+}
+
+# Starting values: mean ~ 0, log10(sd) ~ 0 (i.e. sd ~ 1)
+start <- c(mean = 0, log_sd = 0)
+fit   <- optim(start, neg_ll, data = data_obs, method = "BFGS")
+
+cat("Estimated mean  :", round(fit$par["mean"],   3), "\n")
+cat("Estimated sd    :", round(10^fit$par["log_sd"], 3), "\n")
+```
+
+Now suppose we want to evaluate the model at the fitted parameters using
+`ParmOff`.  The fitted vector uses the internal name `log_sd`, but `dnorm`
+expects `sd`.  We can strip the `log_` prefix and de-log in one step:
+
+```{r dnorm-parmoff}
+fitted_par <- fit$par  # named c(mean=..., log_sd=...)
+
+# strip "log_" prefix → names become mean, sd
+# de-log "sd"        → 10^log_sd
+ll_val <- ParmOff(
+  function(mean, sd) sum(dnorm(data_obs, mean, sd, log = TRUE)),
+  fitted_par,
+  .strip  = "log_",
+  .logged = "sd"
+)
+cat("Log-likelihood at fitted parameters:", round(ll_val, 2), "\n")
+```
+
+---
+
+## 7  Complex example: multi-component galaxy surface-brightness fitting
+
+A realistic scientific use case: fitting a galaxy image with a multi-component
+model where different parameters have different transformations and constraints.
+
+We simulate a simplified galaxy model with two components — a Sérsic bulge and
+an exponential disc — each described by a handful of parameters.  The fitting
+uses `optim`, and several parameters are optimised in log space; bounds keep
+them physically sensible.
+
+```{r galaxy-model, fig.width=6, fig.height=4}
+# Sérsic profile I(r) = I0 * exp(-b_n * ((r/Re)^(1/n) - 1))
+# For simplicity we integrate along a 1-D radial profile
+
+sersic <- function(r, I0, Re, n) {
+  bn <- 2 * n - 1/3   # approximation valid for n > 0.5
+  I0 * exp(-bn * ((r / Re)^(1 / n) - 1))
+}
+
+# Exponential disc: I(r) = I0d * exp(-r / Rd)
+disc <- function(r, I0d, Rd) I0d * exp(-r / Rd)
+
+# Combined profile
+galaxy_profile <- function(r, I0, Re, n, I0d, Rd) {
+  sersic(r, I0, Re, n) + disc(r, I0d, Rd)
+}
+
+# Simulate "observed" data
+set.seed(7)
+r_grid  <- seq(0.1, 10, length.out = 60)
+true_par <- c(I0 = 100, Re = 2, n = 4, I0d = 50, Rd = 3)
+obs      <- galaxy_profile(r_grid, I0 = 100, Re = 2, n = 4, I0d = 50, Rd = 3) *
+              exp(rnorm(60, 0, 0.05))   # 5 % Gaussian scatter in log space
+
+# Chi-squared objective — parameters in "fit space":
+#   log10(I0), log10(Re), n (linear), log10(I0d), log10(Rd)
+# Bounds:  I0 in [1,1e4], Re in [0.1,20], n in [0.5,8],
+#          I0d in [1,1e4], Rd in [0.1,20]
+
+fit_bounds_lower <- c(log10_I0 = 0,    log10_Re = -1,   n = 0.5,
+                      log10_I0d = 0,   log10_Rd = -1)
+fit_bounds_upper <- c(log10_I0 = 4,    log10_Re =  log10(20), n = 8,
+                      log10_I0d = 4,   log10_Rd =  log10(20))
+
+# Objective function — par is named in "log/linear fit space"
+chi_sq <- function(par, r, obs, lower, upper) {
+  # Clamp to bounds (ParmOff does this too, but optim L-BFGS-B handles it here)
+  par <- pmax(pmin(par, upper[names(par)]), lower[names(par)])
+
+  # Use ParmOff to back-transform and forward to galaxy_profile
+  model_val <- ParmOff(
+    galaxy_profile,
+    .args   = as.list(par),
+    .strip  = "log10_",          # log10_I0 -> I0, log10_Re -> Re, etc.
+    .logged = c("I0", "Re", "I0d", "Rd"),  # back-transform these four
+    r       = r                  # extra arg via ...
+  )
+  sum((log(obs) - log(model_val))^2)
+}
+
+start_fit <- c(log10_I0 = 1.5, log10_Re = 0, n = 2,
+               log10_I0d = 1.5, log10_Rd = 0.3)
+
+fit_gal <- optim(
+  start_fit, chi_sq,
+  r = r_grid, obs = obs,
+  lower = fit_bounds_lower, upper = fit_bounds_upper,
+  method = "L-BFGS-B"
+)
+
+# Recover physical parameters
+recovered <- ParmOff(
+  function(log10_I0, log10_Re, n, log10_I0d, log10_Rd)
+    c(I0 = 10^log10_I0, Re = 10^log10_Re, n = n,
+      I0d = 10^log10_I0d, Rd = 10^log10_Rd),
+  as.list(fit_gal$par)
+)
+
+cat("True   :", paste(names(true_par), round(true_par, 2), sep = "=", collapse = ", "), "\n")
+cat("Fitted :", paste(names(recovered), round(recovered, 2), sep = "=", collapse = ", "), "\n")
+```
+
+Key points illustrated:
+
+* `.strip = "log10_"` renames fit-space parameters back to the names
+  `galaxy_profile` expects.
+* `.logged` back-transforms four of the five parameters without touching `n`.
+* The extra argument `r` is injected cleanly via `...` without polluting the
+  parameter vector.
+* Bounds are handled by `optim`'s `L-BFGS-B` here, but `ParmOff`'s `.lower` /
+  `.upper` could alternatively enforce them inside the objective.
+
+---
+
+## 8  Using `.return = 'args'` for debugging
+
+When things go wrong it is useful to inspect exactly which arguments `ParmOff`
+would pass.
+
+```{r return-args}
+result <- ParmOff(
+  model,
+  list(x = 1, y = 2, z = 3, t = 99),
+  .return = "args"
+)
+
+cat("Arguments that WILL be passed:\n")
+print(result$current_args)
+
+cat("\nArguments that were IGNORED:\n")
+print(result$ignore_args)
+```
+
+---
+
+## 9  Performance note
+
+For trivially fast functions, `ParmOff`'s bookkeeping adds measurable overhead.
+It is designed for functions that take at least tens of milliseconds to run.
+For inner loops over fast functions, set `.check = FALSE` to skip the
+`checkmate` validation pass.
+
+```{r perf, eval=FALSE}
+arg_list <- list(x = 1, y = 2, z = 3)
+
+# Baseline: direct call
+system.time(for (i in 1:1e4) model(1, 2, 3))
+
+# do.call
+system.time(for (i in 1:1e4) do.call(model, arg_list))
+
+# ParmOff with full checking
+system.time(for (i in 1:1e4) ParmOff(model, arg_list))
+
+# ParmOff without checking (closer to do.call overhead)
+system.time(for (i in 1:1e4) ParmOff(model, arg_list, .check = FALSE))
+```
+
+---
+
+## 10  Quick-reference table
+
+| Parameter | Type | Purpose |
+|-----------|------|---------|
+| `.func` | function | Target function to call |
+| `.args` | list / named vector | Arguments to consider passing |
+| `.use_args` | character vector | Allowlist of argument names |
+| `.rem_args` | character vector | Blocklist of argument names |
+| `.strip` | string (regex) | Regex stripped from all argument names |
+| `.lower` | named numeric / list | Lower bounds per argument |
+| `.upper` | named numeric / list | Upper bounds per argument |
+| `.bound_raw` | logical | Apply bounds before (`TRUE`) or after (`FALSE`) de-logging |
+| `.logged` | character vector | Arguments stored in log₁₀ space |
+| `.pass_dots` | logical | Pass unmatched args through `...` in `.func` |
+| `.return` | `'function'`\|`'args'` | Return call result or processed argument list |
+| `.check` | logical | Enable/disable checkmate input validation |
+| `.quote` | logical | Passed to `do.call(quote=)` |
+| `.envir` | environment | Passed to `do.call(envir=)` |
