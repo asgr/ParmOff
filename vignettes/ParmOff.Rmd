@@ -13,6 +13,7 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 library(ParmOff)
+library(magicaxis)
 ```
 
 ## Overview
@@ -102,7 +103,7 @@ ParmOff(f, list(x = 2, y = 3, z = 99), .use_args = c("x", "y"))
 
 ```{r rem-args}
 # Remove z before passing; f receives x and y only
-f_xyz <- function(x, y, z) x * y + z
+f_xyz <- function(x = 1, y = 2, z = 3) x * y + z
 ParmOff(f_xyz, list(x = 2, y = 3, z = 99), .rem_args = "z")
 ```
 
@@ -256,7 +257,7 @@ an exponential disc — each described by a handful of parameters.  The fitting
 uses `optim`, and several parameters are optimised in log space; bounds keep
 them physically sensible.
 
-```{r galaxy-model, fig.width=6, fig.height=4}
+```{r galaxy-model}
 # Sérsic profile I(r) = I0 * exp(-b_n * ((r/Re)^(1/n) - 1))
 # For simplicity we integrate along a 1-D radial profile
 
@@ -278,7 +279,7 @@ set.seed(7)
 r_grid  <- seq(0.1, 10, length.out = 60)
 true_par <- c(I0 = 100, Re = 2, n = 4, I0d = 50, Rd = 3)
 obs      <- galaxy_profile(r_grid, I0 = 100, Re = 2, n = 4, I0d = 50, Rd = 3) *
-              exp(rnorm(60, 0, 0.05))   # 5 % Gaussian scatter in log space
+              exp(rnorm(60, 0, 0.01))   # 1 % Gaussian scatter in log space
 
 # Chi-squared objective — parameters in "fit space":
 #   log10(I0), log10(Re), n (linear), log10(I0d), log10(Rd)
@@ -293,7 +294,7 @@ fit_bounds_upper <- c(log10_I0 = 4,    log10_Re =  log10(20), n = 8,
 # Objective function — par is named in "log/linear fit space"
 chi_sq <- function(par, r, obs, lower, upper) {
   # Clamp to bounds (ParmOff does this too, but optim L-BFGS-B handles it here)
-  par <- pmax(pmin(par, upper[names(par)]), lower[names(par)])
+  # par <- pmax(pmin(par, upper[names(par)]), lower[names(par)])
 
   # Use ParmOff to back-transform and forward to galaxy_profile
   model_val <- ParmOff(
@@ -326,6 +327,20 @@ recovered <- ParmOff(
 
 cat("True   :", paste(names(true_par), round(true_par, 2), sep = "=", collapse = ", "), "\n")
 cat("Fitted :", paste(names(recovered), round(recovered, 2), sep = "=", collapse = ", "), "\n")
+```
+
+```{r, fig.width=8, fig.height=6}
+#We can then re-produce the best fit profile easily and compare:
+model_val <- ParmOff(
+    galaxy_profile,
+    .args   = fit_gal$par,
+    .strip  = "log10_",          # log10_I0 -> I0, log10_Re -> Re, etc.
+    .logged = c("I0", "Re", "I0d", "Rd"),  # back-transform these four
+    r       = r_grid                  # extra arg via ...
+  )
+
+magplot(r_grid, obs, type='l', log='xy', xlab='Rad', ylab='Intensity', lwd=5)
+lines(r_grid, model_val, col='lightgreen', lwd=3)
 ```
 
 Key points illustrated:
