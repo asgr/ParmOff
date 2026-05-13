@@ -1,3 +1,4 @@
 exportPattern("^[[:alpha:]]+")
 
+import("checkmate")
 importFrom("utils", "relist")

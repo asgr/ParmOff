@@ -122,6 +122,7 @@ system.time(for(i in 1:1e4){model_ex(input[1], input[2], input[3])})
 arg_list = as.list(input)[1:3]
 system.time(for(i in 1:1e4){do.call(model_ex, arg_list)})
 system.time(for(i in 1:1e4){ParmOff(model_ex, arg_list)})
+system.time(for(i in 1:1e4){ParmOff(model_ex, arg_list, .check=FALSE)})
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory (show via RShowDoc("KEYWORDS")):

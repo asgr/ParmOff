@@ -3,34 +3,34 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
                    .quote = TRUE, .envir = parent.frame(), .pass_dots = TRUE,
                    .return = 'function', .check = TRUE, .bound_raw = TRUE, ...){
   if(.check){
-    checkmate::assert_function(.func)
-    checkmate::assert(
-      checkmate::check_null(.args),
-      checkmate::check_list(.args),
-      checkmate::check_atomic_vector(.args),
+    assert_function(.func)
+    assert(
+      check_null(.args),
+      check_list(.args),
+      check_atomic_vector(.args),
       .var.name = '.args'
     )
-    checkmate::assert_character(.use_args, null.ok = TRUE)
-    checkmate::assert_character(.rem_args, null.ok = TRUE)
-    checkmate::assert_character(.logged, null.ok = TRUE)
-    checkmate::assert(
-      checkmate::check_null(.lower),
-      checkmate::check_numeric(.lower, names = 'unique'),
-      checkmate::check_list(.lower, names = 'unique'),
+    assert_character(.use_args, null.ok = TRUE)
+    assert_character(.rem_args, null.ok = TRUE)
+    assert_character(.logged, null.ok = TRUE)
+    assert(
+      check_null(.lower),
+      check_numeric(.lower, names = 'unique'),
+      check_list(.lower, names = 'unique'),
       .var.name = '.lower'
     )
-    checkmate::assert(
-      checkmate::check_null(.upper),
-      checkmate::check_numeric(.upper, names = 'unique'),
-      checkmate::check_list(.upper, names = 'unique'),
+    assert(
+      check_null(.upper),
+      check_numeric(.upper, names = 'unique'),
+      check_list(.upper, names = 'unique'),
       .var.name = '.upper'
     )
-    checkmate::assert_string(.strip, null.ok = TRUE)
-    checkmate::assert_flag(.quote)
-    checkmate::assert_environment(.envir)
-    checkmate::assert_flag(.pass_dots)
-    checkmate::assert_choice(.return, c('function', 'args'))
-    checkmate::assert_flag(.bound_raw)
+    assert_string(.strip, null.ok = TRUE)
+    assert_flag(.quote)
+    assert_environment(.envir)
+    assert_flag(.pass_dots)
+    assert_choice(.return, c('function', 'args'))
+    assert_flag(.bound_raw)
   }
   
   if(!is.list(.args)){
