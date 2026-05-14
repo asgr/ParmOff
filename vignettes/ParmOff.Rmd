@@ -210,10 +210,50 @@ Internally, `ParmOff` uses three helper functions:
 * `ParmLimHi(x, upper)` for upper clamping,
 * `ParmLimBoth(x, lower, upper)` for both in sequence.
 
-These helpers are recursive, so they also work on nested list structures (not
-just simple vectors). That makes them useful as general-purpose utilities when
-you need consistent bound handling across potentially complex parameter lists,
-even outside direct `ParmOff` calls.
+These helpers are fully recursive, so they work on nested list structures of
+arbitrary depth — not just simple vectors.  The key matching rules are:
+
+**Bound is a named list** — each child of `x` is matched by name.  Children
+with no matching name are left unchanged, so you only need to specify bounds for
+the parameters you care about.
+
+**Bound is a scalar or atomic vector** — broadcast to every leaf in the tree,
+regardless of nesting depth.
+
+**Bound is a named atomic vector and `x` is a named atomic vector** — elements
+are aligned by name; unmatched elements of `x` are left unchanged.
+
+```{r parmlim-pure-vectors}
+# Named vector: partial named bound — only 'a' is clamped
+ParmLimLo(c(a = -5, b = 10, c = 3), lower = c(a = 0))
+
+# Named vectors: both lower and upper, leaving c untouched
+ParmLimBoth(c(a = -5, b = 10, c = 3),
+            lower = c(a = 0),
+            upper = c(b = 7))
+```
+
+```{r parmlim-list-partial}
+# Partial named-list bound: only supply bounds for the children you need
+x <- list(a = -1, b = 5, c = -3)
+ParmLimLo(x, lower = list(a = 0, c = 0))  # b is left unchanged
+```
+
+```{r parmlim-scalar-broadcast}
+# Scalar broadcast: one value applied to every leaf, regardless of nesting
+deep <- list(p = list(q = list(r = -5, s = 20), t = 3), u = -1)
+ParmLimBoth(deep, lower = 0, upper = 10)
+```
+
+```{r parmlim-deep-partial}
+# Deep partial bound: supply bounds only at the levels you need
+ParmLimBoth(deep,
+  lower = list(p = list(q = list(r = 0), t = 0), u = 0),
+  upper = list(p = list(q = list(s = 10), t = 5))
+)
+# p$q$r: 0  (was -5)       p$q$s: 10 (was 20)
+# p$t:   3  (unchanged)    u:     0  (was -1)
+```
 
 ---
 
@@ -484,7 +524,7 @@ system.time(for (i in 1:1e4) ParmOff(model, arg_list, .check = FALSE))
 | `.lower` | named numeric / list | Lower bounds per argument |
 | `.upper` | named numeric / list | Upper bounds per argument |
 | `.bound_raw` | logical | Apply bounds before (`TRUE`) or after (`FALSE`) de-logging |
-| `.logged` | character vector | Arguments stored in log₁₀ space; see also `ParmUnLog` |
+| `.logged` | character or logical vector | Arguments stored in log₁₀ space (character: match by name; logical: TRUE positions de-logged; must equal `length(.args)`); see also `ParmUnLog` |
 | `.pass_dots` | logical | Pass unmatched args through `...` in `.func` |
 | `.return` | `'function'`\|`'args'` | Return call result or processed argument list |
 | `.check` | logical | Enable/disable checkmate input validation |
