@@ -1,4 +1,4 @@
-ParmLimRecur = function(x, bound, lim_fun){
+.ParmLimRecur = function(x, bound, lim_fun){
   if(is.null(bound)){
     return(x)
   }
@@ -23,7 +23,7 @@ ParmLimRecur = function(x, bound, lim_fun){
         }
       }
 
-      out[[i]] = ParmLimRecur(x[[i]], child_bound, lim_fun)
+      out[[i]] = .ParmLimRecur(x[[i]], child_bound, lim_fun)
     }
 
     return(out)
@@ -33,11 +33,11 @@ ParmLimRecur = function(x, bound, lim_fun){
 }
 
 ParmLimLo = function(x, lower){
-  ParmLimRecur(x, lower, pmax)
+  .ParmLimRecur(x, lower, pmax)
 }
 
 ParmLimHi = function(x, upper){
-  ParmLimRecur(x, upper, pmin)
+  .ParmLimRecur(x, upper, pmin)
 }
 
 ParmLimBoth = function(x, lower, upper){
