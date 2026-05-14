@@ -18,10 +18,10 @@ ParmLimBoth(x, lower, upper)
 Object to be limited. Usually a numeric vector/scalar, or a list containing numeric leaves. Nested lists are supported.
 }
   \item{lower}{
-Lower limit specification. Can be scalar/vector-like, or list-like to mirror all or part of \option{x}. Named list elements are matched by name where available.
+Lower limit specification. Can be scalar/vector-like, or list-like to mirror all or part of \code{x}. Named list elements are matched by name where available.
 }
   \item{upper}{
-Upper limit specification. Can be scalar/vector-like, or list-like to mirror all or part of \option{x}. Named list elements are matched by name where available.
+Upper limit specification. Can be scalar/vector-like, or list-like to mirror all or part of \code{x}. Named list elements are matched by name where available.
 }
 }
 \details{
@@ -38,7 +38,7 @@ For list inputs, bounds can be:
 If a list child has no matching bound, that child is left unchanged.
 }
 \value{
-An object with the same overall structure as \option{x}, with limits applied where possible.
+An object with the same overall structure as \code{x}, with limits applied where possible.
 }
 \author{
 Aaron Robotham
