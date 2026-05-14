@@ -14,7 +14,7 @@
       if(is.list(bound)){
         if(!is.null(x_names) && !is.null(bound_names) && x_names[i] %in% bound_names){
           child_bound = bound[[x_names[i]]]
-        }else if(length(bound) == 1){
+        }else if(length(bound) == 1 && is.null(bound_names)){
           child_bound = bound[[1]]
         }else if(i <= length(bound) && is.null(bound_names)){
           child_bound = bound[[i]]

@@ -23,6 +23,11 @@ test_that("ParmLim helpers work on simple named lists", {
   )
 })
 
+test_that("single named bound only affects matching child", {
+  x <- list(a = -1, b = 5)
+  expect_equal(ParmLimLo(x, lower = list(a = 0)), list(a = 0, b = 5))
+})
+
 test_that("ParmLim supports nested lists with partial named bounds", {
   x <- list(a = -1, b = list(c = 5, d = -3), e = 9)
 

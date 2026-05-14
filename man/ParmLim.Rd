@@ -31,7 +31,7 @@ For list inputs, bounds can be:
 \itemize{
   \item Named lists (matched by element name),
   \item Unnamed lists (matched by position),
-  \item Single-element lists (broadcast to all children),
+  \item Single-element unnamed lists (broadcast to all children),
   \item Scalars/vectors (applied to all leaves).
 }
 
