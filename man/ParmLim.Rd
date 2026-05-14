@@ -36,6 +36,12 @@ For list inputs, bounds can be:
 }
 
 If a list child has no matching bound, that child is left unchanged.
+
+For vector inputs, bounds can be:
+\itemize{
+  \item Named vector (matched by element names if \option{x} is also a named vector),
+  \item Unnamed vector (matched by position, potentially with recycling).
+}
 }
 \value{
 An object with the same overall structure as \code{x}, with limits applied where possible.
