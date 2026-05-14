@@ -208,11 +208,11 @@ test_that("ParmLog preserves vector length and names", {
 # ---------------------------------------------------------------------------
 
 test_that("ParmLog errors on invalid log_type", {
-  expect_error(ParmLog(list(a = 10), "a", log_type = "log2"), regexp = "log_type")
+  expect_error(ParmLog(list(a = 10), "a", log_type = "log4"), regexp = "log_type")
 })
 
 test_that("ParmUnLog errors on invalid log_type", {
-  expect_error(ParmUnLog(list(a = 1), "a", log_type = "log2"), regexp = "log_type")
+  expect_error(ParmUnLog(list(a = 1), "a", log_type = "log4"), regexp = "log_type")
 })
 
 # ---------------------------------------------------------------------------

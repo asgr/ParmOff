@@ -27,17 +27,16 @@ transformed. For a character vector, elements whose names appear in
 }
   \item{log_type}{
 Character scalar. Use \code{'log10'} (default) for base-10 transformations
-(\code{\link{log10}} / \code{10^x}), or \code{'ln'} for natural-log
-transformations (\code{\link{log}} / \code{\link{exp}}).
+(\code{\link{log10}} / \code{10^x}), \code{'ln'} for natural-log transformations (\code{\link{log}} / \code{\link{exp}}) or \code{'log2'} for base-2 transformations (\code{\link{log2}} / \code{2^x}).
 }
 }
 \details{
 \code{ParmLog} applies the forward log transformation (\code{log10} or
 \code{log}) to the selected elements. \code{ParmUnLog} applies the inverse
-(\code{10^x} or \code{exp}).
+(\code{10^x}, \code{exp}, \code{10^2}).
 
 Internally, \code{\link{lapply}} is used so that the list structure is never
-simplified. R's vectorised arithmetic (\code{log10}, \code{exp}, \ldots)
+simplified. R's vectorised arithmetic (\code{log10}, \code{exp}, \code{log2})
 preserves the dimensions of matrices and arrays, so those structures are
 returned unchanged in shape.
 

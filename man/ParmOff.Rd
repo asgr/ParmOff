@@ -11,7 +11,7 @@ Simple interface to allow the user to pass complex lists of arguments into funct
 ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
   .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL, .quote = TRUE,
   .envir = parent.frame(), .pass_dots = TRUE, .return = 'func',
-  .check = TRUE, .bound_raw = TRUE, ...)
+  .check = TRUE, .bound_raw = TRUE, .log_type = 'log10', ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -28,10 +28,10 @@ Character vector; arguments in \option{.args} and \dots will be restricted to th
 Character vector; arguments in \option{.args} and \dots will have these arguments removed. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
 }
   \item{.lower}{
-Named numeric vector or list; optional lower bounds for named arguments in \option{.args} and \dots. Arguments whose names appear in \option{.lower} will be clamped to at least that value. Clamping occurs after name-stripping and dot-merging, but before de-logging if \option{.bound_raw} is TRUE, and after de-logging if \option{.bound_raw} is FALSE. Names should be as per post-stripped (if \option{.strip} is provided).
+Lower limit specification. Can be scalar/vector-like, or list-like to mirror all or part of \option{.args}. Named list elements are matched by name where available. If \option{.args} is a list and \option{lower} is vector then \option{lower} is applied to all list elements. Almost always if \option{.args} is named list then \option{lower} should also be a named list (potentially just a subset).
 }
   \item{.upper}{
-Named numeric vector or list; optional upper bounds for named arguments in \option{.args} and \dots. Arguments whose names appear in \option{.upper} will be clamped to at most that value. Clamping occurs after name-stripping and dot-merging, but before de-logging if \option{.bound_raw} is TRUE, and after de-logging if \option{.bound_raw} is FALSE. Applied after \option{.lower}. Names should be as per post-stripped (if \option{.strip} is provided).
+Upper limit specification. Can be scalar/vector-like, or list-like to mirror all or part of \option{.args}. Named list elements are matched by name where available. If \option{.args} is a list and \option{upper} is vector then \option{upper} is applied to all list elements. Almost always if \option{.args} is named list then \option{upper} should also be a named list (potentially just a subset).
 }
   \item{.logged}{
 Character/logical vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name/s provided should be as per post-stripped (if \option{.strip} is provided). If providing a logical vector it must also be exactly the same length as \option{.args}. We deliberately do not allow just a positional (which-like) integer vector because it is very easy to create subtle bugs.
@@ -56,6 +56,10 @@ Logical; should input argument checking be carried out? Obviously safer to say T
 }
   \item{.bound_raw}{
 Logical; should \option{.lower} and \option{.upper} bounds be applied pre de-logging (via \option{.logged}) i.e. TRUE (default), or after de-logging i.e. FALSE.
+}
+  \item{.log_type}{
+Character scalar. Use \code{'log10'} (default) for base-10 transformations
+(\code{\link{log10}} / \code{10^x}), \code{'ln'} for natural-log transformations (\code{\link{log}} / \code{\link{exp}}) or \code{'log2'} for base-2 transformations (\code{\link{log2}} / \code{2^x}).
 }
   \item{\dots}{
 Other arguments to be merged with \option{.args} and processed as discussed above.

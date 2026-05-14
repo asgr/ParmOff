@@ -19,7 +19,8 @@ ParmLog = function(x, logged, log_type = 'log10') {
   log_fun = switch(log_type,
     'log10' = log10,
     'ln'    = log,
-    stop("log_type must be 'log10' or 'ln'")
+    'log2'  = log2,
+    stop("log_type must be 'log10', 'ln' or 'log2'")
   )
   .ParmLogApply(x, logged, log_fun)
 }
@@ -28,7 +29,8 @@ ParmUnLog = function(x, logged, log_type = 'log10') {
   log_fun = switch(log_type,
     'log10' = function(v) 10^v,
     'ln'    = exp,
-    stop("log_type must be 'log10' or 'ln'")
+    'log2'  = log2,
+    stop("log_type must be 'log10', 'ln' or 'log2'")
   )
   .ParmLogApply(x, logged, log_fun)
 }

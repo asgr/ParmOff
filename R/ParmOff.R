@@ -1,7 +1,7 @@
 ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
                    .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL,
                    .quote = TRUE, .envir = parent.frame(), .pass_dots = TRUE,
-                   .return = 'func', .check = TRUE, .bound_raw = TRUE, ...){
+                   .return = 'func', .check = TRUE, .bound_raw = TRUE, .log_type = 'log10', ...){
   if(.check){
     assert_function(.func)
     assert(
@@ -36,6 +36,7 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     assert_flag(.pass_dots)
     assert_choice(.return, c('func', 'function', 'args', 'arg', 'func_args', 'func_arg'))
     assert_flag(.bound_raw)
+    assert_choice(.log_type, c('log10', 'ln', 'log2'))
   }
   
   if(!is.list(.args)){
@@ -63,40 +64,27 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
   # arg_names computed after dot-merging so it reflects the full argument set
   arg_names = names(.args)
   
-  if(.bound_raw){ #apply bounds before we de_log
+  if(.bound_raw){ #apply bounds after we de_log
     if(!is.null(.lower)){
-      shared = arg_names[arg_names %in% names(.lower)]
-      if(length(shared) > 0){
-        .args[shared] = ParmLimLo(.args[shared], .lower[shared])
-      }
+      .args = ParmLimLo(.args, .lower)
     }
-  
+    
     if(!is.null(.upper)){
-      shared = arg_names[arg_names %in% names(.upper)]
-      if(length(shared) > 0){
-        .args[shared] = ParmLimHi(.args[shared], .upper[shared])
-      }
+      .args = ParmLimHi(.args, .upper)
     }
   }
 
-  
-  if(!is.null(.logged)){
+  if(!is.null(.logged)){ #do any unlogging
     .args = ParmUnLog(.args, .logged)
   }
   
   if(!.bound_raw){ #apply bounds after we de_log
     if(!is.null(.lower)){
-      shared = arg_names[arg_names %in% names(.lower)]
-      if(length(shared) > 0){
-        .args[shared] = ParmLimLo(.args[shared], .lower[shared])
-      }
+      .args = ParmLimLo(.args, .lower)
     }
     
     if(!is.null(.upper)){
-      shared = arg_names[arg_names %in% names(.upper)]
-      if(length(shared) > 0){
-        .args[shared] = ParmLimHi(.args[shared], .upper[shared])
-      }
+      .args = ParmLimHi(.args, .upper)
     }
   }
   
