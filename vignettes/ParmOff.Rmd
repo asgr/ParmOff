@@ -202,6 +202,19 @@ ParmOff(model, list(x = 1, y = 2, z = 3),
         .logged = "y", .upper = c(y = 5), .bound_raw = FALSE)
 ```
 
+### 5.3  The underlying `ParmLim*` helpers
+
+Internally, `ParmOff` uses three helper functions:
+
+* `ParmLimLo(x, lower)` for lower clamping,
+* `ParmLimHi(x, upper)` for upper clamping,
+* `ParmLimBoth(x, lower, upper)` for both in sequence.
+
+These helpers are recursive, so they also work on nested list structures (not
+just simple vectors). That makes them useful as general-purpose utilities when
+you need consistent bound handling across potentially complex parameter lists,
+even outside direct `ParmOff` calls.
+
 ---
 
 ## 6  Real-world example: fitting a Normal distribution with `optim`
