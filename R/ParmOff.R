@@ -1,7 +1,7 @@
 ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
                    .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL,
                    .quote = TRUE, .envir = parent.frame(), .pass_dots = TRUE,
-                   .return = 'func', .check = TRUE, .bound_raw = TRUE, ...){
+                   .return = 'func', .check = TRUE, .bound_raw = TRUE, .log_type = 'log10', ...){
   if(.check){
     assert_function(.func)
     assert(
@@ -12,7 +12,12 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     )
     assert_character(.use_args, null.ok = TRUE)
     assert_character(.rem_args, null.ok = TRUE)
-    assert_character(.logged, null.ok = TRUE)
+    assert(
+      check_null(.logged),
+      check_character(.logged),
+      check_logical(.logged),
+      .var.name = '.logged'
+    )
     assert(
       check_null(.lower),
       check_numeric(.lower, names = 'unique'),
@@ -31,6 +36,7 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     assert_flag(.pass_dots)
     assert_choice(.return, c('func', 'function', 'args', 'arg', 'func_args', 'func_arg'))
     assert_flag(.bound_raw)
+    assert_choice(.log_type, c('log10', 'ln', 'log2'))
   }
   
   if(!is.list(.args)){
@@ -60,47 +66,28 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
   
   if(.bound_raw){ #apply bounds before we de_log
     if(!is.null(.lower)){
-      shared = arg_names[arg_names %in% names(.lower)]
-      if(length(shared) > 0){
-        .args[shared] = ParmLimLo(.args[shared], .lower[shared])
-      }
+      .args = ParmLimLo(.args, .lower)
     }
-  
+    
     if(!is.null(.upper)){
-      shared = arg_names[arg_names %in% names(.upper)]
-      if(length(shared) > 0){
-        .args[shared] = ParmLimHi(.args[shared], .upper[shared])
-      }
+      .args = ParmLimHi(.args, .upper)
     }
   }
 
-  
-  if(!is.null(.logged)){
-    if(is.logical(.logged) && length(.logged) == length(.args)){
-      .args[.logged] = lapply(.args[.logged], function(x) 10^x)
-    }else if(is.character(.logged) && !is.null(names(.args))){
-      logged_present = which(arg_names %in% .logged)
-      if(length(logged_present) > 0){
-        .args[logged_present] = lapply(.args[logged_present], function(x) 10^x)
-      }
-    } else {
-      warning(".logged must be either a logical vector of length(.args) or a character vector of names")
+  if(!is.null(.logged)){ #do any unlogging
+    if(is.logical(.logged) && length(.logged) != length(.args)){
+      stop('.logged logical vector must be the same length as .args (got ', length(.logged), ' vs ', length(.args), ')')
     }
+    .args = ParmUnLog(.args, .logged)
   }
   
   if(!.bound_raw){ #apply bounds after we de_log
     if(!is.null(.lower)){
-      shared = arg_names[arg_names %in% names(.lower)]
-      if(length(shared) > 0){
-        .args[shared] = ParmLimLo(.args[shared], .lower[shared])
-      }
+      .args = ParmLimLo(.args, .lower)
     }
     
     if(!is.null(.upper)){
-      shared = arg_names[arg_names %in% names(.upper)]
-      if(length(shared) > 0){
-        .args[shared] = ParmLimHi(.args[shared], .upper[shared])
-      }
+      .args = ParmLimHi(.args, .upper)
     }
   }
   

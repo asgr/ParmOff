@@ -40,11 +40,11 @@ test_that(".rem_args must be NULL or character vector", {
                regexp = "Assertion")
 })
 
-test_that(".logged must be NULL or character vector", {
+test_that(".logged must be NULL, character vector, or logical vector", {
   expect_error(ParmOff(f_xyz, list(x=1,y=2,z=3), .logged = 1L),
                regexp = "Assertion")
-  expect_error(ParmOff(f_xyz, list(x=1,y=2,z=3), .logged = TRUE),
-               regexp = "Assertion")
+  # logical vector is now valid — must not error
+  expect_silent(ParmOff(f_xyz, list(x=1,y=2,z=3), .logged = c(TRUE, FALSE, FALSE)))
 })
 
 test_that(".lower must be NULL, named numeric, or named list", {
@@ -256,59 +256,88 @@ test_that(".logged applied before .use_args filtering", {
   )
 })
 
+test_that(".logged logical vector de-logs flagged argument", {
+  # x=1 flagged TRUE -> 10^1=10; y=2, z=3: f(10,2,3) = 23
+  expect_equal(ParmOff(f_xyz, list(x=1, y=2, z=3), .logged=c(TRUE, FALSE, FALSE)), 23)
+})
+
+test_that(".logged logical vector de-logs multiple arguments", {
+  # x=1->10, y=1->10: f(10,10,3) = 103
+  expect_equal(ParmOff(f_xyz, list(x=1, y=1, z=3), .logged=c(TRUE, TRUE, FALSE)), 103)
+})
+
+test_that(".logged all-FALSE logical vector is a no-op", {
+  expect_equal(ParmOff(f_xyz, list(x=1, y=2, z=3), .logged=c(FALSE, FALSE, FALSE)), 5)
+})
+
+test_that(".logged logical vector applied before .use_args filtering", {
+  # x flagged -> 10^1=10; then keep x, y only: f_xy(10, 2) = 12
+  expect_equal(
+    ParmOff(f_xy, list(x=1, y=2, z=3), .logged=c(TRUE, FALSE, FALSE), .use_args=c("x","y")),
+    12
+  )
+})
+
+test_that(".logged logical vector of wrong length errors", {
+  expect_error(
+    ParmOff(f_xyz, list(x=1, y=2, z=3), .logged=c(TRUE, FALSE)),
+    regexp = "same length"
+  )
+})
+
 # ---------------------------------------------------------------------------
 # .lower / .upper clamping ---------------------------------------------------
 # ---------------------------------------------------------------------------
 
 test_that(".lower clamps argument upward", {
   # x=0.5, lower x=1 -> x clamped to 1; f(1,2,3)=5
-  expect_equal(ParmOff(f_xyz, list(x=0.5, y=2, z=3), .lower=c(x=1)), 5)
+  expect_equal(ParmOff(f_xyz, list(x=0.5, y=2, z=3), .lower=list(x=1)), 5)
 })
 
 test_that(".upper clamps argument downward", {
   # y=10, upper y=2 -> y clamped to 2; f(1,2,3)=5
-  expect_equal(ParmOff(f_xyz, list(x=1, y=10, z=3), .upper=c(y=2)), 5)
+  expect_equal(ParmOff(f_xyz, list(x=1, y=10, z=3), .upper=list(y=2)), 5)
 })
 
 test_that(".lower and .upper both applied in order", {
   # x=0 lower=1 -> 1; y=10 upper=2 -> 2; z=3 unchanged; f(1,2,3)=5
   expect_equal(
-    ParmOff(f_xyz, list(x=0, y=10, z=3), .lower=c(x=1), .upper=c(y=2)),
+    ParmOff(f_xyz, list(x=0, y=10, z=3), .lower=c(x=1), .upper=list(y=2)),
     5
   )
 })
 
 test_that(".lower with names NOT in .args is a no-op", {
-  expect_equal(ParmOff(f_xyz, list(x=1, y=2, z=3), .lower=c(phantom=99)), 5)
+  expect_equal(ParmOff(f_xyz, list(x=1, y=2, z=3), .lower=list(phantom=99)), 5)
 })
 
 test_that(".upper with names NOT in .args is a no-op", {
-  expect_equal(ParmOff(f_xyz, list(x=1, y=2, z=3), .upper=c(phantom=-99)), 5)
+  expect_equal(ParmOff(f_xyz, list(x=1, y=2, z=3), .upper=list(phantom=-99)), 5)
 })
 
 test_that(".lower already satisfied (value >= bound) is a no-op", {
-  expect_equal(ParmOff(f_xyz, list(x=5, y=2, z=3), .lower=c(x=1)), 13)
+  expect_equal(ParmOff(f_xyz, list(x=5, y=2, z=3), .lower=list(x=1)), 13)
 })
 
 test_that(".upper already satisfied (value <= bound) is a no-op", {
-  expect_equal(ParmOff(f_xyz, list(x=1, y=1, z=3), .upper=c(y=2)), 4)
+  expect_equal(ParmOff(f_xyz, list(x=1, y=1, z=3), .upper=list(y=2)), 4)
 })
 
 test_that(".lower applied to ... argument", {
   # z supplied via ...; lower z=5 -> z clamped to 5; f(1,2,5)=7
-  expect_equal(ParmOff(f_xyz, list(x=1, y=2), .lower=c(z=5), z=3), 7)
+  expect_equal(ParmOff(f_xyz, list(x=1, y=2), .lower=list(z=5), z=3), 7)
 })
 
 test_that(".upper applied to ... argument", {
   # z supplied via ...; upper z=2 -> z clamped to 2; f(1,2,2)=4
-  expect_equal(ParmOff(f_xyz, list(x=1, y=2), .upper=c(z=2), z=3), 4)
+  expect_equal(ParmOff(f_xyz, list(x=1, y=2), .upper=list(z=2), z=3), 4)
 })
 
 test_that(".lower clamping happens before .logged de-logging", {
   # y=0 (log10 space), lower y=1 (log10 space) -> y clamped to 1 -> 10^1=10
   # f_xy(1, 10) = 11
   expect_equal(
-    ParmOff(f_xy, list(x=1, y=0), .logged="y", .lower=c(y=1)),
+    ParmOff(f_xy, list(x=1, y=0), .logged="y", .lower=list(y=1)),
     11
   )
 })
@@ -316,7 +345,7 @@ test_that(".lower clamping happens before .logged de-logging", {
 test_that(".upper clamping happens before .logged de-logging", {
   # y=3 (log10), upper y=1 -> clamped to 1 -> 10^1=10; f_xy(1,10)=11
   expect_equal(
-    ParmOff(f_xy, list(x=1, y=3), .logged="y", .upper=c(y=1)),
+    ParmOff(f_xy, list(x=1, y=3), .logged="y", .upper=list(y=1)),
     11
   )
 })
@@ -332,7 +361,7 @@ test_that(".lower > value AND .upper < value: .upper wins (pmin after pmax)", {
 test_that(".lower == .upper clamps to exact value", {
   # x=5, lower=upper=2: pmax(5,2)=5, pmin(5,2)=2; f(2,2,3)=7
   expect_equal(
-    ParmOff(f_xyz, list(x=5, y=2, z=3), .lower=c(x=2), .upper=c(x=2)),
+    ParmOff(f_xyz, list(x=5, y=2, z=3), .lower=list(x=2), .upper=list(x=2)),
     7
   )
 })
@@ -342,7 +371,7 @@ test_that(".lower == .upper clamps to exact value", {
 test_that(".bound_raw=FALSE applies .lower in real space after de-logging", {
   # y=0 (log10) -> 10^0=1; lower y=2 (real) -> pmax(1,2)=2; f_xy(1,2)=3
   expect_equal(
-    ParmOff(f_xy, list(x=1, y=0), .logged="y", .lower=c(y=2), .bound_raw=FALSE),
+    ParmOff(f_xy, list(x=1, y=0), .logged="y", .lower=list(y=2), .bound_raw=FALSE),
     3
   )
 })
@@ -350,7 +379,7 @@ test_that(".bound_raw=FALSE applies .lower in real space after de-logging", {
 test_that(".bound_raw=FALSE applies .upper in real space after de-logging", {
   # y=2 (log10) -> 10^2=100; upper y=5 (real) -> pmin(100,5)=5; f_xy(1,5)=6
   expect_equal(
-    ParmOff(f_xy, list(x=1, y=2), .logged="y", .upper=c(y=5), .bound_raw=FALSE),
+    ParmOff(f_xy, list(x=1, y=2), .logged="y", .upper=list(y=5), .bound_raw=FALSE),
     6
   )
 })
@@ -358,7 +387,7 @@ test_that(".bound_raw=FALSE applies .upper in real space after de-logging", {
 test_that(".bound_raw=FALSE: satisfied bound in real space is a no-op", {
   # y=1 (log10) -> 10^1=10; lower y=5 (real) -> pmax(10,5)=10; f_xy(1,10)=11
   expect_equal(
-    ParmOff(f_xy, list(x=1, y=1), .logged="y", .lower=c(y=5), .bound_raw=FALSE),
+    ParmOff(f_xy, list(x=1, y=1), .logged="y", .lower=list(y=5), .bound_raw=FALSE),
     11
   )
 })
@@ -368,11 +397,11 @@ test_that(".bound_raw=FALSE and .bound_raw=TRUE differ when bound crosses log sc
   # .bound_raw=TRUE (bound in log space): pmax(0,1)=1 -> 10^1=10; f_xy(1,10)=11
   # .bound_raw=FALSE (bound in real space): 10^0=1 -> pmax(1,1)=1; f_xy(1,1)=2
   expect_equal(
-    ParmOff(f_xy, list(x=1, y=0), .logged="y", .lower=c(y=1), .bound_raw=TRUE),
+    ParmOff(f_xy, list(x=1, y=0), .logged="y", .lower=list(y=1), .bound_raw=TRUE),
     11
   )
   expect_equal(
-    ParmOff(f_xy, list(x=1, y=0), .logged="y", .lower=c(y=1), .bound_raw=FALSE),
+    ParmOff(f_xy, list(x=1, y=0), .logged="y", .lower=list(y=1), .bound_raw=FALSE),
     2
   )
 })
@@ -380,11 +409,11 @@ test_that(".bound_raw=FALSE and .bound_raw=TRUE differ when bound crosses log sc
 test_that(".bound_raw=FALSE without .logged behaves identically to TRUE", {
   # No de-logging, so bound_raw has no effect on the outcome
   expect_equal(
-    ParmOff(f_xyz, list(x=0, y=10, z=3), .lower=c(x=1), .upper=c(y=2), .bound_raw=FALSE),
+    ParmOff(f_xyz, list(x=0, y=10, z=3), .lower=list(x=1), .upper=list(y=2), .bound_raw=FALSE),
     5
   )
   expect_equal(
-    ParmOff(f_xyz, list(x=0, y=10, z=3), .lower=c(x=1), .upper=c(y=2), .bound_raw=TRUE),
+    ParmOff(f_xyz, list(x=0, y=10, z=3), .lower=list(x=1), .upper=list(y=2), .bound_raw=TRUE),
     5
   )
 })
@@ -392,7 +421,7 @@ test_that(".bound_raw=FALSE without .logged behaves identically to TRUE", {
 test_that(".bound_raw=FALSE applied to ... argument (real-space lower)", {
   # z via ...; z=2 (log10) -> 10^2=100; lower z=5 (real) -> pmax(100,5)=100; f(1,2,100)=102
   expect_equal(
-    ParmOff(f_xyz, list(x=1, y=2), .logged="z", .lower=c(z=5), .bound_raw=FALSE, z=2),
+    ParmOff(f_xyz, list(x=1, y=2), .logged="z", .lower=list(z=5), .bound_raw=FALSE, z=2),
     102
   )
 })

@@ -210,14 +210,112 @@ Internally, `ParmOff` uses three helper functions:
 * `ParmLimHi(x, upper)` for upper clamping,
 * `ParmLimBoth(x, lower, upper)` for both in sequence.
 
-These helpers are recursive, so they also work on nested list structures (not
-just simple vectors). That makes them useful as general-purpose utilities when
-you need consistent bound handling across potentially complex parameter lists,
-even outside direct `ParmOff` calls.
+These helpers are fully recursive, so they work on nested list structures of
+arbitrary depth — not just simple vectors.  The key matching rules are:
+
+**Bound is a named list** — each child of `x` is matched by name.  Children
+with no matching name are left unchanged, so you only need to specify bounds for
+the parameters you care about.
+
+**Bound is a scalar or atomic vector** — broadcast to every leaf in the tree,
+regardless of nesting depth.
+
+**Bound is a named atomic vector and `x` is a named atomic vector** — elements
+are aligned by name; unmatched elements of `x` are left unchanged.
+
+```{r parmlim-pure-vectors}
+# Named vector: partial named bound — only 'a' is clamped
+ParmLimLo(c(a = -5, b = 10, c = 3), lower = c(a = 0))
+
+# Named vectors: both lower and upper, leaving c untouched
+ParmLimBoth(c(a = -5, b = 10, c = 3),
+            lower = c(a = 0),
+            upper = c(b = 7))
+```
+
+```{r parmlim-list-partial}
+# Partial named-list bound: only supply bounds for the children you need
+x <- list(a = -1, b = 5, c = -3)
+ParmLimLo(x, lower = list(a = 0, c = 0))  # b is left unchanged
+```
+
+```{r parmlim-scalar-broadcast}
+# Scalar broadcast: one value applied to every leaf, regardless of nesting
+deep <- list(p = list(q = list(r = -5, s = 20), t = 3), u = -1)
+ParmLimBoth(deep, lower = 0, upper = 10)
+```
+
+```{r parmlim-deep-partial}
+# Deep partial bound: supply bounds only at the levels you need
+ParmLimBoth(deep,
+  lower = list(p = list(q = list(r = 0), t = 0), u = 0),
+  upper = list(p = list(q = list(s = 10), t = 5))
+)
+# p$q$r: 0  (was -5)       p$q$s: 10 (was 20)
+# p$t:   3  (unchanged)    u:     0  (was -1)
+```
 
 ---
 
-## 6  Real-world example: fitting a Normal distribution with `optim`
+## 6  Log/unlog helpers (`ParmLog` / `ParmUnLog`)
+
+`ParmOff` delegates all log-transformation work to two standalone helpers that
+can also be used directly:
+
+* `ParmLog(x, logged, log_type = 'log10')` — applies a forward log
+  transformation to selected elements of `x`.
+* `ParmUnLog(x, logged, log_type = 'log10')` — applies the inverse
+  transformation (what `.logged` inside `ParmOff` does).
+
+Both accept the same flexible `logged` selector that `ParmOff`'s `.logged`
+accepts:
+
+* **character vector** — transform elements whose names match.
+* **logical vector** — transform elements where the flag is `TRUE` (must be
+  the same length as `x`).
+
+The `log_type` argument controls the flavour of the transformation:
+
+* `'log10'` (default) — `log10()` / `10^x`
+* `'ln'` — `log()` / `exp()`
+
+The shape of each element (matrix, array, vector) is always preserved because
+the helpers use `lapply` internally and R's log/exp functions respect
+dimensions.
+
+```{r parmlog-character}
+params <- list(amplitude = 100, scale = 10, offset = 3)
+
+# Forward-transform two parameters to log10 space
+logged_params <- ParmLog(params, logged = c("amplitude", "scale"))
+logged_params
+
+# Back-transform them
+ParmUnLog(logged_params, logged = c("amplitude", "scale"))
+```
+
+```{r parmlog-logical}
+# Logical-vector selector: transform the first two elements
+ParmUnLog(list(a = 2, b = 1, c = 5), logged = c(TRUE, TRUE, FALSE))
+# a = 10^2 = 100, b = 10^1 = 10, c unchanged
+```
+
+```{r parmlog-ln}
+# Natural-log flavour
+ParmLog(list(sigma = exp(3), mu = 0), logged = "sigma", log_type = 'ln')
+# sigma = log(exp(3)) = 3
+```
+
+```{r parmlog-matrix}
+# Matrix elements retain their shape
+mat_params <- list(cov = matrix(c(100, 0, 0, 100), 2, 2), mu = 5)
+out <- ParmLog(mat_params, logged = "cov")
+out$cov   # still a 2×2 matrix, values are log10 of originals
+```
+
+---
+
+## 7  Real-world example: fitting a Normal distribution with `optim`
 
 A common pattern is to fit a parametric model using `optim`.  The parameter
 vector passed to the objective function needs to be forwarded cleanly to the
@@ -260,7 +358,7 @@ cat("Log-likelihood at fitted parameters:", round(ll_val, 2), "\n")
 
 ---
 
-## 7  Complex example: multi-component galaxy surface-brightness fitting
+## 8  Complex example: multi-component galaxy surface-brightness fitting
 
 A realistic scientific use case: fitting a galaxy image with a multi-component
 model where different parameters have different transformations and constraints.
@@ -368,7 +466,7 @@ Key points illustrated:
 
 ---
 
-## 8  Using `.return = 'args'` for debugging
+## 9  Using `.return = 'args'` for debugging
 
 When things go wrong it is useful to inspect exactly which arguments `ParmOff`
 would pass.
@@ -389,7 +487,7 @@ print(result$ignore_args)
 
 ---
 
-## 9  Performance note
+## 10  Performance note
 
 For trivially fast functions, `ParmOff`'s bookkeeping adds measurable overhead.
 It is designed for functions that take at least tens of milliseconds to run.
@@ -414,7 +512,7 @@ system.time(for (i in 1:1e4) ParmOff(model, arg_list, .check = FALSE))
 
 ---
 
-## 10  Quick-reference table
+## 11  Quick-reference table
 
 | Parameter | Type | Purpose |
 |-----------|------|---------|
@@ -426,9 +524,19 @@ system.time(for (i in 1:1e4) ParmOff(model, arg_list, .check = FALSE))
 | `.lower` | named numeric / list | Lower bounds per argument |
 | `.upper` | named numeric / list | Upper bounds per argument |
 | `.bound_raw` | logical | Apply bounds before (`TRUE`) or after (`FALSE`) de-logging |
-| `.logged` | character vector | Arguments stored in log₁₀ space |
+| `.logged` | character or logical vector | Arguments stored in log₁₀ space (character: match by name; logical: TRUE positions de-logged; must equal `length(.args)`); see also `ParmUnLog` |
 | `.pass_dots` | logical | Pass unmatched args through `...` in `.func` |
 | `.return` | `'function'`\|`'args'` | Return call result or processed argument list |
 | `.check` | logical | Enable/disable checkmate input validation |
 | `.quote` | logical | Passed to `do.call(quote=)` |
 | `.envir` | environment | Passed to `do.call(envir=)` |
+
+**Standalone helpers**
+
+| Function | Purpose |
+|----------|---------|
+| `ParmLog(x, logged, log_type)` | Forward-log selected list elements (`'log10'` or `'ln'`) |
+| `ParmUnLog(x, logged, log_type)` | Inverse-log selected list elements (`'log10'` or `'ln'`) |
+| `ParmLimLo(x, lower)` | Apply lower bounds recursively |
+| `ParmLimHi(x, upper)` | Apply upper bounds recursively |
+| `ParmLimBoth(x, lower, upper)` | Apply lower then upper bounds recursively |
