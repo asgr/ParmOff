@@ -1,4 +1,5 @@
 \name{ParmLim}
+\alias{ParmLim}
 \alias{ParmLimLo}
 \alias{ParmLimHi}
 \alias{ParmLimBoth}
