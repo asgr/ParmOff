@@ -43,7 +43,7 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     .args = as.list(.args)
   }
 
-  if(.return == 'args'){
+  if(.return %in% c('args', 'arg', 'func_args', 'func_arg')){
     input_args = .args
   }
 
