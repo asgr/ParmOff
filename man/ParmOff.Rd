@@ -10,7 +10,7 @@ Simple interface to allow the user to pass complex lists of arguments into funct
 \usage{
 ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
   .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL, .quote = TRUE,
-  .envir = parent.frame(), .pass_dots = TRUE, .return = 'function',
+  .envir = parent.frame(), .pass_dots = TRUE, .return = 'func',
   .check = TRUE, .bound_raw = TRUE, ...)
 }
 %- maybe also 'usage' for other objects documented here.

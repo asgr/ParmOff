@@ -62,7 +62,7 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     if(!is.null(.lower)){
       shared = arg_names[arg_names %in% names(.lower)]
       if(length(shared) > 0){
-        .args[shared] = ParmLimLo(args[shared], .lower[shared])
+        .args[shared] = ParmLimLo(.args[shared], .lower[shared])
       }
     }
   
