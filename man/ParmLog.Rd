@@ -33,7 +33,7 @@ Character scalar. Use \code{'log10'} (default) for base-10 transformations
 \details{
 \code{ParmLog} applies the forward log transformation (\code{log10} or
 \code{log}) to the selected elements. \code{ParmUnLog} applies the inverse
-(\code{10^x}, \code{exp}, \code{10^2}).
+(\code{10^x}, \code{exp}, \code{2^x}).
 
 Internally, \code{\link{lapply}} is used so that the list structure is never
 simplified. R's vectorised arithmetic (\code{log10}, \code{exp}, \code{log2})

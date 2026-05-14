@@ -278,6 +278,13 @@ test_that(".logged logical vector applied before .use_args filtering", {
   )
 })
 
+test_that(".logged logical vector of wrong length errors", {
+  expect_error(
+    ParmOff(f_xyz, list(x=1, y=2, z=3), .logged=c(TRUE, FALSE)),
+    regexp = "same length"
+  )
+})
+
 # ---------------------------------------------------------------------------
 # .lower / .upper clamping ---------------------------------------------------
 # ---------------------------------------------------------------------------

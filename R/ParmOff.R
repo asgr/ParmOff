@@ -64,7 +64,7 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
   # arg_names computed after dot-merging so it reflects the full argument set
   arg_names = names(.args)
   
-  if(.bound_raw){ #apply bounds after we de_log
+  if(.bound_raw){ #apply bounds before we de_log
     if(!is.null(.lower)){
       .args = ParmLimLo(.args, .lower)
     }
@@ -75,6 +75,9 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
   }
 
   if(!is.null(.logged)){ #do any unlogging
+    if(is.logical(.logged) && length(.logged) != length(.args)){
+      stop('.logged logical vector must be the same length as .args (got ', length(.logged), ' vs ', length(.args), ')')
+    }
     .args = ParmUnLog(.args, .logged)
   }
   

@@ -29,7 +29,7 @@ ParmUnLog = function(x, logged, log_type = 'log10') {
   log_fun = switch(log_type,
     'log10' = function(v) 10^v,
     'ln'    = exp,
-    'log2'  = log2,
+    'log2'  = function(v) 2^v,
     stop("log_type must be 'log10', 'ln' or 'log2'")
   )
   .ParmLogApply(x, logged, log_fun)

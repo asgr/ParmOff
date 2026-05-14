@@ -170,6 +170,31 @@ test_that("ParmLog -> ParmUnLog round-trip via logical vector", {
   expect_equal(ParmUnLog(ParmLog(x, sel), sel), x)
 })
 
+test_that("ParmLog log2: named selection uses log2", {
+  x <- list(a = 8, b = 4, c = 5)
+  out <- ParmLog(x, logged = c("a", "b"), log_type = 'log2')
+  expect_equal(out$a, log2(8))
+  expect_equal(out$b, log2(4))
+  expect_equal(out$c, 5)
+})
+
+test_that("ParmUnLog log2: named selection applies inverse transformation", {
+  x <- list(a = 3, b = 2, c = 5)
+  out <- ParmUnLog(x, logged = c("a", "b"), log_type = 'log2')
+  expect_equal(out$a, 2^3)
+  expect_equal(out$b, 2^2)
+  expect_equal(out$c, 5)
+})
+
+test_that("ParmLog -> ParmUnLog round-trip log2", {
+  x <- list(a = 8, b = 4, c = 5)
+  flags <- c("a", "b")
+  expect_equal(
+    ParmUnLog(ParmLog(x, flags, log_type = 'log2'), flags, log_type = 'log2'),
+    x
+  )
+})
+
 # ---------------------------------------------------------------------------
 # Structure preservation (matrix) -------------------------------------------
 # ---------------------------------------------------------------------------
