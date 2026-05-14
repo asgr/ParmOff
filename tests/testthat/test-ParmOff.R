@@ -40,11 +40,11 @@ test_that(".rem_args must be NULL or character vector", {
                regexp = "Assertion")
 })
 
-test_that(".logged must be NULL or character vector", {
+test_that(".logged must be NULL, character vector, or logical vector", {
   expect_error(ParmOff(f_xyz, list(x=1,y=2,z=3), .logged = 1L),
                regexp = "Assertion")
-  expect_error(ParmOff(f_xyz, list(x=1,y=2,z=3), .logged = TRUE),
-               regexp = "Assertion")
+  # logical vector is now valid — must not error
+  expect_silent(ParmOff(f_xyz, list(x=1,y=2,z=3), .logged = c(TRUE, FALSE, FALSE)))
 })
 
 test_that(".lower must be NULL, named numeric, or named list", {
@@ -252,6 +252,28 @@ test_that(".logged applied before .use_args filtering", {
   # x in log10=1 -> 10; then only keep x, y: f_xy(10, 2) = 12
   expect_equal(
     ParmOff(f_xy, list(x=1, y=2, z=3), .logged="x", .use_args=c("x","y")),
+    12
+  )
+})
+
+test_that(".logged logical vector de-logs flagged argument", {
+  # x=1 flagged TRUE -> 10^1=10; y=2, z=3: f(10,2,3) = 23
+  expect_equal(ParmOff(f_xyz, list(x=1, y=2, z=3), .logged=c(TRUE, FALSE, FALSE)), 23)
+})
+
+test_that(".logged logical vector de-logs multiple arguments", {
+  # x=1->10, y=1->10: f(10,10,3) = 103
+  expect_equal(ParmOff(f_xyz, list(x=1, y=1, z=3), .logged=c(TRUE, TRUE, FALSE)), 103)
+})
+
+test_that(".logged all-FALSE logical vector is a no-op", {
+  expect_equal(ParmOff(f_xyz, list(x=1, y=2, z=3), .logged=c(FALSE, FALSE, FALSE)), 5)
+})
+
+test_that(".logged logical vector applied before .use_args filtering", {
+  # x flagged -> 10^1=10; then keep x, y only: f_xy(10, 2) = 12
+  expect_equal(
+    ParmOff(f_xy, list(x=1, y=2, z=3), .logged=c(TRUE, FALSE, FALSE), .use_args=c("x","y")),
     12
   )
 })

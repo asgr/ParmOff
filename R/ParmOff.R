@@ -12,7 +12,12 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     )
     assert_character(.use_args, null.ok = TRUE)
     assert_character(.rem_args, null.ok = TRUE)
-    assert_character(.logged, null.ok = TRUE)
+    assert(
+      check_null(.logged),
+      check_character(.logged),
+      check_logical(.logged),
+      .var.name = '.logged'
+    )
     assert(
       check_null(.lower),
       check_numeric(.lower, names = 'unique'),
