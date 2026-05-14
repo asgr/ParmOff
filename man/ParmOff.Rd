@@ -49,7 +49,7 @@ Environment; to be passed to \option{envir} argument of \code{\link{do.call}}.
 Logical; if TRUE (default) and \option{.func} has a \dots argument input then unmatched arguments will be passed on (on the implicit assumption these will be matched by a function within \option{.func}). If FALSE or \option{.func} has no \dots argument input then only remaining matching arguments will be passed into \option{.func}. This intervention happens last.
 }
   \item{.return}{
-Character scalar; if 'function' then the output of \code{\link{do.call}} on the target \option{.func} with the remaining current_args, returning the output only. If 'args' then a list with the current_args (that meet all the matching critera) and ignore_args (provided but not to be used) are returned.
+Character scalar; if 'func' (or 'function') then the output of \code{\link{do.call}} on the target \option{.func} with the remaining 'current_args', returning the output only. If 'args' (or 'arg') then a list with the 'current_args' (that meet all the matching critera) and 'ignore_args' (provided but not to be used) are returned. If 'func_args' (or 'func_arg') then both are returned in a list with items 'func_out' and 'args' respectively.
 }
   \item{.check}{
 Logical; should input argument checking be carried out? Obviously safer to say TRUE (default), but in speed critical cases you might want to set to FALSE.

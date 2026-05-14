@@ -1,7 +1,7 @@
 ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
                    .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL,
                    .quote = TRUE, .envir = parent.frame(), .pass_dots = TRUE,
-                   .return = 'function', .check = TRUE, .bound_raw = TRUE, ...){
+                   .return = 'func', .check = TRUE, .bound_raw = TRUE, ...){
   if(.check){
     assert_function(.func)
     assert(
@@ -114,11 +114,16 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     }
   }
 
-  if(.return == 'function'){
+  if(.return == 'function' | .return=='func'){
     return(do.call(what=.func, args=.args, quote=.quote, envir=.envir))
-  }else if(.return == 'args'){
+  }else if(.return == 'args' | .return=='arg'){
     return(list(current_args = .args, ignore_args = input_args[! names(input_args) %in% names(.args)]))
+  }else if(.return == 'func_args' | .return=='func_arg'){
+    output = list(
+      func_out = do.call(what=.func, args=.args, quote=.quote, envir=.envir),
+      args_out = list(current_args = .args, ignore_args = input_args[! names(input_args) %in% names(.args)])
+    )
   }else{
-    stop('return must be one of function / args!')
+    stop('return must be one of func / args / func_args!')
   }
 }
