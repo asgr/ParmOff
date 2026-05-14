@@ -29,7 +29,7 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     assert_flag(.quote)
     assert_environment(.envir)
     assert_flag(.pass_dots)
-    assert_choice(.return, c('function', 'args'))
+    assert_choice(.return, c('func', 'function', 'args', 'arg', 'func_args', 'func_arg'))
     assert_flag(.bound_raw)
   }
   
