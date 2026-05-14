@@ -34,7 +34,7 @@ Named numeric vector or list; optional lower bounds for named arguments in \opti
 Named numeric vector or list; optional upper bounds for named arguments in \option{.args} and \dots. Arguments whose names appear in \option{.upper} will be clamped to at most that value. Clamping occurs after name-stripping and dot-merging, but before de-logging if \option{.bound_raw} is TRUE, and after de-logging if \option{.bound_raw} is FALSE. Applied after \option{.lower}. Names should be as per post-stripped (if \option{.strip} is provided).
 }
   \item{.logged}{
-Character vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
+Character/logical vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name/s provided should be as per post-stripped (if \option{.strip} is provided). If providing a logical vector it must also be exactly the same length as \option{.args}. We deliberately do not allow just a positional (which-like) integer vector because it is very easy to create subtle bugs.
 }
   \item{.strip}{
 Character vector; a string element to strip out of all \option{.args} names. This intervention happens first.

@@ -74,13 +74,20 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     }
   }
 
+  
   if(!is.null(.logged)){
-    logged_present = arg_names[arg_names %in% .logged]
-    if(length(logged_present) > 0){
-      .args[logged_present] = lapply(.args[logged_present], function(x) 10^x)
+    if(is.logical(.logged) && length(.logged) == length(.args)){
+      .args[.logged] = lapply(.args[.logged], function(x) 10^x)
+    }else if(is.character(.logged) && !is.null(names(.args))){
+      logged_present = which(arg_names %in% .logged)
+      if(length(logged_present) > 0){
+        .args[logged_present] = lapply(.args[logged_present], function(x) 10^x)
+      }
+    } else {
+      warning(".logged must be either a logical vector of length(.args) or a character vector of names")
     }
   }
-
+  
   if(!.bound_raw){ #apply bounds after we de_log
     if(!is.null(.lower)){
       shared = arg_names[arg_names %in% names(.lower)]
