@@ -324,6 +324,13 @@ test_that("ParmLimLo verbose is silent when no clamping occurs", {
   )
 })
 
+test_that("ParmLimLo verbose is silent for integer no-op (type-coercion safety)", {
+  # pmax coerces integer to double; all.equal(check.attributes=FALSE) treats them as equal
+  expect_silent(
+    ParmLimLo(list(a = 1L), lower = list(a = 0), verbose = TRUE)
+  )
+})
+
 test_that("ParmLimHi verbose is silent when no clamping occurs", {
   expect_silent(
     ParmLimHi(list(a = -1, b = 5), upper = list(a = 0), verbose = TRUE)

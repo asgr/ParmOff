@@ -519,11 +519,21 @@ ParmOff(model,
         .upper  = list(y = 10),
         .logged = "z",
         .verbose = TRUE)
-# Lower limit imposed on 'x': before: -1, after: 0
-# Upper limit imposed on 'y': before: 20, after: 10
-# ParmUnLog (log10) applied to 'z': before: 1, after: 10
-# Used arguments: x y z
-# Ignored arguments: (none)
+# Messages emitted (multi-line format):
+#   Lower limit imposed on 'x'
+#     before: -1
+#     after:  0
+#   Upper limit imposed on 'y'
+#     before: 20
+#     after:  10
+#   ParmUnLog (10^x) applied to 'z'
+#     before: 1
+#     after:  10
+#   Used arguments:
+#   x y z
+#
+#   Ignored arguments:
+#   (empty — all arguments were used)
 # Result: 0 * 10 + 10 = 10
 ```
 

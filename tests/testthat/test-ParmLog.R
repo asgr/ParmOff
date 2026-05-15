@@ -254,6 +254,18 @@ test_that("ParmOff .logged on multiple args after refactor", {
   expect_equal(ParmOff(model, list(x = 1, y = 1, z = 3), .logged = c("x", "y")), 103)
 })
 
+test_that("ParmOff .log_type='ln' is forwarded to ParmUnLog", {
+  # y stored as log(10) ~ 2.302585; de-logged with ln gives exp(log(10)) = 10
+  f <- function(x, y) x + y
+  expect_equal(ParmOff(f, list(x = 0, y = log(10)), .logged = "y", .log_type = 'ln'), 10)
+})
+
+test_that("ParmOff .log_type='log2' is forwarded to ParmUnLog", {
+  # y stored as log2(8) = 3; de-logged with log2 gives 2^3 = 8
+  f <- function(x, y) x + y
+  expect_equal(ParmOff(f, list(x = 0, y = 3), .logged = "y", .log_type = 'log2'), 8)
+})
+
 # ---------------------------------------------------------------------------
 # verbose argument -----------------------------------------------------------
 # ---------------------------------------------------------------------------

@@ -136,7 +136,10 @@ ParmLimLo(x, lower = 0)    # a=0,  b=5
 
 # Print before/after values when clamping actually changes something
 ParmLimLo(list(a = -1, b = 5), lower = list(a = 0), verbose = TRUE)
-# message: Lower limit imposed on 'a': before: -1, after: 0
+# Message emitted (multi-line):
+#   Lower limit imposed on 'a'
+#     before: -1
+#     after:  0
 # 'b' is not reported because it is already above its lower bound
 
 ParmLimBoth(list(x = -2, y = 15), lower = list(x = 0), upper = list(y = 10),

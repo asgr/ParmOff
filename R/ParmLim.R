@@ -25,13 +25,13 @@
     for (nm in nms) {
       b = before[[nm]]
       a = after[[nm]]
-      if (!identical(b, a) && .is_printable(b)) {
+      if (!isTRUE(all.equal(b, a, check.attributes = FALSE)) && .is_printable(b)) {
         message(operation, " imposed on '", nm, "'\n  before: ", .format_val(b),
                 '\n  after:  ', .format_val(a))
       }
     }
   } else {
-    if (!identical(before, after) && .is_printable(before)) {
+    if (!isTRUE(all.equal(before, after, check.attributes = FALSE)) && .is_printable(before)) {
       message(operation, " imposed\n  before: ", .format_val(before),
               '\n  after:  ', .format_val(after))
     }
