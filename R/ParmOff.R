@@ -68,11 +68,11 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
 
   if(.bound_raw){ #apply bounds before we de_log
     if(!is.null(.lower)){
-      .args = ParmLimLo(.args, .lower)
+      .args = ParmLimLo(.args, .lower, verbose = .verbose)
     }
 
     if(!is.null(.upper)){
-      .args = ParmLimHi(.args, .upper)
+      .args = ParmLimHi(.args, .upper, verbose = .verbose)
     }
   }
 
@@ -80,16 +80,16 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     if(is.logical(.logged) && length(.logged) != length(.args)){
       stop('.logged logical vector must be the same length as .args (got ', length(.logged), ' vs ', length(.args), ')')
     }
-    .args = ParmUnLog(.args, .logged)
+    .args = ParmUnLog(.args, .logged, log_type = .log_type, verbose = .verbose)
   }
 
   if(!.bound_raw){ #apply bounds after we de_log
     if(!is.null(.lower)){
-      .args = ParmLimLo(.args, .lower)
+      .args = ParmLimLo(.args, .lower, verbose = .verbose)
     }
 
     if(!is.null(.upper)){
-      .args = ParmLimHi(.args, .upper)
+      .args = ParmLimHi(.args, .upper, verbose = .verbose)
     }
   }
 

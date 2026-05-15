@@ -288,3 +288,99 @@ test_that("ParmOff .bound_raw=TRUE with logical .logged applies bounds before de
   out <- ParmOff(f, list(x = 2), .logged = TRUE, .upper = list(x = 1), .bound_raw = TRUE)
   expect_equal(out, 10)
 })
+
+# ---------------------------------------------------------------------------
+# verbose argument -----------------------------------------------------------
+# ---------------------------------------------------------------------------
+
+test_that("ParmLimLo verbose emits message when clamping occurs", {
+  expect_message(
+    ParmLimLo(list(a = -1, b = 5), lower = list(a = 0), verbose = TRUE),
+    regexp = "Lower limit.*a"
+  )
+})
+
+test_that("ParmLimHi verbose emits message when clamping occurs", {
+  expect_message(
+    ParmLimHi(list(a = -1, b = 5), upper = list(b = 3), verbose = TRUE),
+    regexp = "Upper limit.*b"
+  )
+})
+
+test_that("ParmLimBoth verbose emits messages for each clamped element", {
+  msgs <- character(0)
+  withCallingHandlers(
+    ParmLimBoth(list(x = -2, y = 15), lower = list(x = 0), upper = list(y = 10),
+                verbose = TRUE),
+    message = function(m) { msgs <<- c(msgs, conditionMessage(m)); invokeRestart("muffleMessage") }
+  )
+  expect_true(any(grepl("Lower limit.*x", msgs)))
+  expect_true(any(grepl("Upper limit.*y", msgs)))
+})
+
+test_that("ParmLimLo verbose is silent when no clamping occurs", {
+  expect_silent(
+    ParmLimLo(list(a = 1, b = 5), lower = list(a = 0), verbose = TRUE)
+  )
+})
+
+test_that("ParmLimHi verbose is silent when no clamping occurs", {
+  expect_silent(
+    ParmLimHi(list(a = -1, b = 5), upper = list(a = 0), verbose = TRUE)
+  )
+})
+
+test_that("ParmLimLo verbose=FALSE (default) is always silent", {
+  expect_silent(ParmLimLo(list(a = -1), lower = list(a = 0)))
+})
+
+test_that("ParmLimLo verbose message includes before and after values", {
+  msg <- ""
+  withCallingHandlers(
+    ParmLimLo(list(a = -3), lower = list(a = 0), verbose = TRUE),
+    message = function(m) { msg <<- conditionMessage(m); invokeRestart("muffleMessage") }
+  )
+  expect_match(msg, "-3")
+  expect_match(msg, "0")
+})
+
+test_that("ParmLimHi verbose message includes before and after values", {
+  msg <- ""
+  withCallingHandlers(
+    ParmLimHi(list(y = 20), upper = list(y = 10), verbose = TRUE),
+    message = function(m) { msg <<- conditionMessage(m); invokeRestart("muffleMessage") }
+  )
+  expect_match(msg, "20")
+  expect_match(msg, "10")
+})
+
+test_that("ParmLimLo verbose works on named atomic vector", {
+  expect_message(
+    ParmLimLo(c(a = -5, b = 2), lower = 0, verbose = TRUE),
+    regexp = "Lower limit"
+  )
+})
+
+test_that("ParmLimLo verbose is silent for large vectors (length > 20)", {
+  x_long <- as.list(setNames(rep(-1, 25), paste0("p", seq_len(25))))
+  # no message expected because elements are scalars inside list — each is printed individually
+  # but a plain atomic vector longer than 20 should be suppressed
+  x_vec <- setNames(rep(-1, 25), paste0("p", seq_len(25)))
+  expect_silent(ParmLimLo(x_vec, lower = 0, verbose = TRUE))
+})
+
+test_that("ParmOff .verbose passes to ParmLimLo", {
+  f <- function(x) x
+  expect_message(
+    ParmOff(f, list(x = -5), .lower = list(x = 0), .verbose = TRUE),
+    regexp = "Lower limit.*x"
+  )
+})
+
+test_that("ParmOff .verbose passes to ParmLimHi", {
+  f <- function(x) x
+  expect_message(
+    ParmOff(f, list(x = 20), .upper = list(x = 10), .verbose = TRUE),
+    regexp = "Upper limit.*x"
+  )
+})

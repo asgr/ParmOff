@@ -12,8 +12,8 @@ character vector of names (the same interface used throughout the
 vector, etc.) is preserved in the output.
 }
 \usage{
-ParmLog(x, logged, log_type = 'log10')
-ParmUnLog(x, logged, log_type = 'log10')
+ParmLog(x, logged, log_type = 'log10', verbose = FALSE)
+ParmUnLog(x, logged, log_type = 'log10', verbose = FALSE)
 }
 \arguments{
   \item{x}{
@@ -29,6 +29,12 @@ transformed. For a character vector, elements whose names appear in
 Character scalar. Use \code{'log10'} (default) for base-10 transformations
 (\code{\link{log10}} / \code{10^x}), \code{'ln'} for natural-log transformations (\code{\link{log}} / \code{\link{exp}}) or \code{'log2'} for base-2 transformations (\code{\link{log2}} / \code{2^x}).
 }
+  \item{verbose}{
+Logical; if TRUE, prints a message for each element that is transformed,
+showing its name and before/after values. Output is only printed for elements
+that are simple scalars, vectors of length \eqn{\le 20}, or matrices of size
+\eqn{\le 10 \times 10}. Default is FALSE.
+}
 }
 \details{
 \code{ParmLog} applies the forward log transformation (\code{log10} or
@@ -41,7 +47,9 @@ preserves the dimensions of matrices and arrays, so those structures are
 returned unchanged in shape.
 
 \code{ParmUnLog} is used internally by \code{\link{ParmOff}} to back-transform
-arguments listed in \code{.logged}.
+arguments listed in \code{.logged}. When \code{\link{ParmOff}} is called with
+\code{.verbose = TRUE}, that flag is forwarded to \code{ParmUnLog} so that
+de-logging transformations are reported automatically.
 }
 \value{
 A copy of \code{x} with the selected elements transformed.
@@ -68,6 +76,11 @@ ParmUnLog(ParmLog(params, logged = c("a", "b")), logged = c("a", "b"))
 flags <- c(TRUE, TRUE, FALSE)
 ParmLog(params, logged = flags)
 ParmUnLog(params, logged = flags, log_type = 'ln')  # natural-log inverse
+
+# --- verbose output for debugging ---
+# Print the name and before/after values of each transformed element
+ParmLog(params, logged = c("a", "b"), verbose = TRUE)
+ParmUnLog(list(a = 2, b = 1, c = 5), logged = c("a", "b"), verbose = TRUE)
 
 # --- matrix elements keep their shape ---
 mat_params <- list(mu = 5, cov = matrix(c(100, 0, 0, 100), 2, 2))

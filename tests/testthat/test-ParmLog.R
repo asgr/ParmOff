@@ -253,3 +253,105 @@ test_that("ParmOff .logged on multiple args after refactor", {
   model <- function(x, y, z) x * y + z
   expect_equal(ParmOff(model, list(x = 1, y = 1, z = 3), .logged = c("x", "y")), 103)
 })
+
+# ---------------------------------------------------------------------------
+# verbose argument -----------------------------------------------------------
+# ---------------------------------------------------------------------------
+
+test_that("ParmLog verbose emits message for each transformed element (character)", {
+  expect_message(
+    ParmLog(list(a = 100, b = 10, c = 5), logged = c("a", "b"), verbose = TRUE),
+    regexp = "ParmLog.*a"
+  )
+})
+
+test_that("ParmUnLog verbose emits message for each transformed element (character)", {
+  expect_message(
+    ParmUnLog(list(a = 2, b = 1, c = 5), logged = c("a", "b"), verbose = TRUE),
+    regexp = "ParmUnLog.*a"
+  )
+})
+
+test_that("ParmLog verbose emits message for each transformed element (logical)", {
+  expect_message(
+    ParmLog(list(a = 100, b = 10), logged = c(TRUE, FALSE), verbose = TRUE),
+    regexp = "ParmLog.*a"
+  )
+})
+
+test_that("ParmUnLog verbose emits message for each transformed element (logical)", {
+  expect_message(
+    ParmUnLog(list(a = 2, b = 1), logged = c(TRUE, FALSE), verbose = TRUE),
+    regexp = "ParmUnLog.*a"
+  )
+})
+
+test_that("ParmLog verbose message includes before and after values", {
+  msg <- ""
+  withCallingHandlers(
+    ParmLog(list(a = 100), logged = "a", verbose = TRUE),
+    message = function(m) { msg <<- conditionMessage(m); invokeRestart("muffleMessage") }
+  )
+  expect_match(msg, "100")
+  expect_match(msg, "2")
+})
+
+test_that("ParmUnLog verbose message includes before and after values", {
+  msg <- ""
+  withCallingHandlers(
+    ParmUnLog(list(a = 2), logged = "a", verbose = TRUE),
+    message = function(m) { msg <<- conditionMessage(m); invokeRestart("muffleMessage") }
+  )
+  expect_match(msg, "2")
+  expect_match(msg, "100")
+})
+
+test_that("ParmLog verbose=FALSE (default) is silent", {
+  expect_silent(ParmLog(list(a = 100, b = 10), logged = "a"))
+})
+
+test_that("ParmUnLog verbose=FALSE (default) is silent", {
+  expect_silent(ParmUnLog(list(a = 2, b = 1), logged = "a"))
+})
+
+test_that("ParmLog verbose is silent for name not in list (no-op)", {
+  expect_silent(ParmLog(list(a = 100), logged = "phantom", verbose = TRUE))
+})
+
+test_that("ParmLog verbose reports log_type in message", {
+  msg <- ""
+  withCallingHandlers(
+    ParmLog(list(a = 100), logged = "a", log_type = 'ln', verbose = TRUE),
+    message = function(m) { msg <<- conditionMessage(m); invokeRestart("muffleMessage") }
+  )
+  expect_match(msg, "ln")
+})
+
+test_that("ParmOff .verbose passes to ParmUnLog", {
+  model <- function(x, y, z) x * y + z
+  expect_message(
+    ParmOff(model, list(x = 1, y = 1, z = 3), .logged = "y", .verbose = TRUE),
+    regexp = "ParmUnLog.*y"
+  )
+})
+
+test_that("ParmLog verbose preserves return value", {
+  result <- suppressMessages(
+    ParmLog(list(a = 100, b = 10), logged = "a", verbose = TRUE)
+  )
+  expect_equal(result$a, log10(100))
+  expect_equal(result$b, 10)
+})
+
+test_that("ParmUnLog verbose preserves return value", {
+  result <- suppressMessages(
+    ParmUnLog(list(a = 2, b = 1), logged = "a", verbose = TRUE)
+  )
+  expect_equal(result$a, 100)
+  expect_equal(result$b, 1)
+})
+
+test_that("ParmLog verbose suppresses output for large vectors", {
+  x_long <- list(scale = seq_len(25))  # length 25 > 20
+  expect_silent(ParmLog(x_long, logged = "scale", verbose = TRUE))
+})

@@ -1,3 +1,46 @@
+# ---------------------------------------------------------------------------
+# Internal verbose helpers (shared by ParmLim and ParmLog)
+# ---------------------------------------------------------------------------
+
+.is_printable = function(x) {
+  if (is.matrix(x)) return(nrow(x) <= 10 && ncol(x) <= 10)
+  is.atomic(x) && length(x) <= 20
+}
+
+.format_val = function(x) {
+  if (is.matrix(x)) {
+    rows = apply(format(x), 1, paste, collapse = ' ')
+    paste0('[\n    ', paste(rows, collapse = '\n    '), '\n  ]')
+  } else if (!is.null(names(x))) {
+    paste(names(x), format(x), sep = '=', collapse = ', ')
+  } else {
+    paste(format(x), collapse = ', ')
+  }
+}
+
+.ParmLimVerbose = function(before, after, operation) {
+  if (is.list(before)) {
+    nms = names(before)
+    if (is.null(nms)) return(invisible(NULL))
+    for (nm in nms) {
+      b = before[[nm]]
+      a = after[[nm]]
+      if (!identical(b, a) && .is_printable(b)) {
+        message(operation, " imposed on '", nm, "'\n  before: ", .format_val(b),
+                '\n  after:  ', .format_val(a))
+      }
+    }
+  } else {
+    if (!identical(before, after) && .is_printable(before)) {
+      message(operation, " imposed\n  before: ", .format_val(before),
+              '\n  after:  ', .format_val(after))
+    }
+  }
+  invisible(NULL)
+}
+
+# ---------------------------------------------------------------------------
+
 .ParmLimRecur = function(x, bound, lim_fun) {
   
   # Nothing to do
@@ -63,14 +106,18 @@
 }
 
 
-ParmLimLo = function(x, lower){
-  .ParmLimRecur(x, lower, pmax)
+ParmLimLo = function(x, lower, verbose = FALSE) {
+  result = .ParmLimRecur(x, lower, pmax)
+  if (verbose) .ParmLimVerbose(x, result, 'Lower limit')
+  result
 }
 
-ParmLimHi = function(x, upper){
-  .ParmLimRecur(x, upper, pmin)
+ParmLimHi = function(x, upper, verbose = FALSE) {
+  result = .ParmLimRecur(x, upper, pmin)
+  if (verbose) .ParmLimVerbose(x, result, 'Upper limit')
+  result
 }
 
-ParmLimBoth = function(x, lower, upper){
-  ParmLimHi(ParmLimLo(x, lower), upper)
+ParmLimBoth = function(x, lower, upper, verbose = FALSE) {
+  ParmLimHi(ParmLimLo(x, lower, verbose = verbose), upper, verbose = verbose)
 }

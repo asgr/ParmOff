@@ -65,7 +65,7 @@ Character scalar. Use \code{'log10'} (default) for base-10 transformations
 Character scalar; what to do if multiple \option{.args} have the same name. Since this is generally not allowed when passing arguments into a function, you generally either want to take the 'first' (default) or 'last' option. There is also the option to do 'nothing', which is mainly for de-bugging purposes. Note \dots are only used if their names do not clash with the initial provided \option{.args}, i.e. the latter always takes priority if there is a clash (no matter the setting of \option{.clash}.
 }
   \item{.verbose}{
-Logical; if TRUE it will print to screen the names of the used and ignored arguments, if FALSE then no verbose output is printed (unless by the called function itself).
+Logical; if TRUE it will print to screen the names of the used and ignored arguments, and also forwards the flag to \code{\link{ParmLimLo}}, \code{\link{ParmLimHi}}, and \code{\link{ParmUnLog}} so that lower/upper limit clamping and de-logging operations report the parameter name and its before/after values. Output is only printed for elements that are simple scalars, vectors of length \eqn{\le 20}, or matrices of size \eqn{\le 10 \times 10}. If FALSE then no verbose output is printed (unless by the called function itself).
 }
   \item{\dots}{
 Other arguments to be merged with \option{.args} and processed as discussed above. Note \dots are only used if their names do not clash with the initial provided \option{.args}, i.e. the latter always takes priority if there is a clash (no matter the setting of \option{.clash}.

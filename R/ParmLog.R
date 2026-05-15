@@ -14,22 +14,53 @@
   return(x)
 }
 
-ParmLog = function(x, logged, log_type = 'log10') {
+.ParmLogVerbose = function(before, after, logged, operation) {
+  if (is.logical(logged)) {
+    sel_idx = which(logged)
+    nms = names(before)
+    for (i in sel_idx) {
+      nm = if (!is.null(nms) && i <= length(nms)) nms[i] else paste0('[', i, ']')
+      b = before[[i]]
+      a = after[[i]]
+      if (.is_printable(b)) {
+        message(operation, " applied to '", nm, "'\n  before: ", .format_val(b),
+                '\n  after:  ', .format_val(a))
+      }
+    }
+  } else if (is.character(logged) && !is.null(names(before))) {
+    sel = names(before)[names(before) %in% logged]
+    for (nm in sel) {
+      b = before[[nm]]
+      a = after[[nm]]
+      if (.is_printable(b)) {
+        message(operation, " applied to '", nm, "'\n  before: ", .format_val(b),
+                '\n  after:  ', .format_val(a))
+      }
+    }
+  }
+  invisible(NULL)
+}
+
+ParmLog = function(x, logged, log_type = 'log10', verbose = FALSE) {
   log_fun = switch(log_type,
     'log10' = log10,
     'ln'    = log,
     'log2'  = log2,
     stop("log_type must be 'log10', 'ln' or 'log2'")
   )
-  .ParmLogApply(x, logged, log_fun)
+  result = .ParmLogApply(x, logged, log_fun)
+  if (verbose) .ParmLogVerbose(x, result, logged, paste0('ParmLog (', log_type, ')'))
+  result
 }
 
-ParmUnLog = function(x, logged, log_type = 'log10') {
+ParmUnLog = function(x, logged, log_type = 'log10', verbose = FALSE) {
   log_fun = switch(log_type,
     'log10' = function(v) 10^v,
     'ln'    = exp,
     'log2'  = function(v) 2^v,
     stop("log_type must be 'log10', 'ln' or 'log2'")
   )
-  .ParmLogApply(x, logged, log_fun)
+  result = .ParmLogApply(x, logged, log_fun)
+  if (verbose) .ParmLogVerbose(x, result, logged, paste0('ParmUnLog (', log_type, ')'))
+  result
 }

@@ -487,7 +487,82 @@ print(result$ignore_args)
 
 ---
 
-## 10  Performance note
+## 10  Verbose debugging (`.verbose`)
+
+Setting `.verbose = TRUE` activates diagnostic output at three levels:
+
+1. **Argument selection** — names of arguments that will be passed to the
+   function and those that will be ignored (the existing `.verbose` behaviour).
+2. **Limit clamping** — for each argument that is actually changed by `.lower`
+   or `.upper`, a message reports the parameter name and its before/after
+   values.
+3. **De-logging** — for each argument transformed by `.logged`, a message
+   reports the parameter name and its before/after values.
+
+All three levels fire from a single `.verbose = TRUE` flag on `ParmOff`.  The
+same flag can also be passed directly to the standalone helpers `ParmLimLo`,
+`ParmLimHi`, `ParmLimBoth`, `ParmLog`, and `ParmUnLog`.
+
+Output is only emitted when the value actually changes, and only for elements
+that are reasonably small: scalars, vectors of length ≤ 20, or matrices of
+size ≤ 10 × 10.  Larger structures are silently skipped to avoid flooding the
+console.
+
+```{r verbose-basic}
+model <- function(x, y, z) x * y + z
+
+# x is below its lower bound, y is above its upper bound
+# z is in log10 space and will be de-logged
+ParmOff(model,
+        list(x = -1, y = 20, z = 1),
+        .lower  = list(x = 0),
+        .upper  = list(y = 10),
+        .logged = "z",
+        .verbose = TRUE)
+# Lower limit imposed on 'x': before: -1, after: 0
+# Upper limit imposed on 'y': before: 20, after: 10
+# ParmUnLog (log10) applied to 'z': before: 1, after: 10
+# Used arguments: x y z
+# Ignored arguments: (none)
+# Result: 0 * 10 + 10 = 10
+```
+
+You can also call the helpers directly with `verbose = TRUE` to inspect
+individual transformations without going through `ParmOff`:
+
+```{r verbose-helpers}
+# Lower limit
+ParmLimLo(list(alpha = -0.5, beta = 2), lower = list(alpha = 0), verbose = TRUE)
+
+# Upper limit
+ParmLimHi(list(sigma = 100, mu = 5), upper = list(sigma = 50), verbose = TRUE)
+
+# Forward log (e.g. before passing to an optimiser)
+ParmLog(list(amplitude = 500, index = 1.5), logged = "amplitude", verbose = TRUE)
+
+# De-log
+ParmUnLog(list(amplitude = 2.7, index = 1.5), logged = "amplitude", verbose = TRUE)
+```
+
+### When is verbose useful?
+
+The verbose flag is designed for subtle debugging situations where it is not
+obvious whether bounds or log transformations are firing.  Common scenarios:
+
+* An optimiser is converging to a boundary value and you want to confirm that
+  a bound is actually clamping the parameter.
+* A parameter value looks unexpectedly large or small after de-logging and you
+  want to trace the before/after.
+* You are building up a complex multi-step `ParmOff` call and want to verify
+  each transformation step.
+
+Because verbose output uses `message()` it is easy to suppress in production
+code (`suppressMessages(...)`) or capture for logging
+(`withCallingHandlers(..., message = ...)`).
+
+---
+
+## 11  Performance note
 
 For trivially fast functions, `ParmOff`'s bookkeeping adds measurable overhead.
 It is designed for functions that take at least tens of milliseconds to run.
@@ -512,7 +587,7 @@ system.time(for (i in 1:1e4) ParmOff(model, arg_list, .check = FALSE))
 
 ---
 
-## 11  Quick-reference table
+## 12  Quick-reference table
 
 | Parameter | Type | Purpose |
 |-----------|------|---------|
@@ -530,13 +605,14 @@ system.time(for (i in 1:1e4) ParmOff(model, arg_list, .check = FALSE))
 | `.check` | logical | Enable/disable checkmate input validation |
 | `.quote` | logical | Passed to `do.call(quote=)` |
 | `.envir` | environment | Passed to `do.call(envir=)` |
+| `.verbose` | logical | Print used/ignored args and forward verbose flag to `ParmLimLo`, `ParmLimHi`, `ParmUnLog` (before/after values for each changed parameter) |
 
 **Standalone helpers**
 
 | Function | Purpose |
 |----------|---------|
-| `ParmLog(x, logged, log_type)` | Forward-log selected list elements (`'log10'` or `'ln'`) |
-| `ParmUnLog(x, logged, log_type)` | Inverse-log selected list elements (`'log10'` or `'ln'`) |
-| `ParmLimLo(x, lower)` | Apply lower bounds recursively |
-| `ParmLimHi(x, upper)` | Apply upper bounds recursively |
-| `ParmLimBoth(x, lower, upper)` | Apply lower then upper bounds recursively |
+| `ParmLog(x, logged, log_type, verbose)` | Forward-log selected list elements (`'log10'`, `'ln'`, or `'log2'`) |
+| `ParmUnLog(x, logged, log_type, verbose)` | Inverse-log selected list elements (`'log10'`, `'ln'`, or `'log2'`) |
+| `ParmLimLo(x, lower, verbose)` | Apply lower bounds recursively |
+| `ParmLimHi(x, upper, verbose)` | Apply upper bounds recursively |
+| `ParmLimBoth(x, lower, upper, verbose)` | Apply lower then upper bounds recursively |
