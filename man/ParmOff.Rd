@@ -10,8 +10,8 @@ Simple interface to allow the user to pass complex lists of arguments into funct
 \usage{
 ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
   .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL, .quote = TRUE,
-  .envir = parent.frame(), .pass_dots = TRUE, .return = 'func',
-  .check = TRUE, .bound_raw = TRUE, .log_type = 'log10', ...)
+  .envir = parent.frame(), .pass_dots = TRUE, .return = 'func', .check = TRUE,
+  .bound_raw = TRUE, .log_type = 'log10', .clash = 'first', ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -61,8 +61,11 @@ Logical; should \option{.lower} and \option{.upper} bounds be applied pre de-log
 Character scalar. Use \code{'log10'} (default) for base-10 transformations
 (\code{\link{log10}} / \code{10^x}), \code{'ln'} for natural-log transformations (\code{\link{log}} / \code{\link{exp}}) or \code{'log2'} for base-2 transformations (\code{\link{log2}} / \code{2^x}).
 }
+  \item{.clash}{
+Character scalar; what to do if multiple \option{.args} have the same name. Since this is generally not allowed when passing arguments into a function, you generally either want to take the 'first' (default) or 'last' option. There is also the option to do 'nothing', which is mainly for de-bugging purposes. Note \dots are only used if their names do not clash with the initial provided \option{.args}, i.e. the latter always takes priority if there is a clash (no matter the setting of \option{.clash}.
+}
   \item{\dots}{
-Other arguments to be merged with \option{.args} and processed as discussed above.
+Other arguments to be merged with \option{.args} and processed as discussed above. Note \dots are only used if their names do not clash with the initial provided \option{.args}, i.e. the latter always takes priority if there is a clash (no matter the setting of \option{.clash}.
 }
 }
 \details{
@@ -78,6 +81,7 @@ These events happen in this exact order:
   \item If \option{.use_args} is present then restrict current_args to these arguments.
   \item If \option{.rem_args} is present then remove these arguments from current_args.
   \item If \dots are not present in the arguments of \option{.func} or \option{.pass_dots}=FALSE then restrict the current_args list to only those arguments that appear in the \code{\link{formals}} of \option{.func}.
+  \item If there are any name clashes in the remaining current_args then disambiguate using the setting of \option{.clash}.
   \item Return the output of \code{\link{do.call}} or the current_args (depending on the setting of \option{.return}.
 }
 

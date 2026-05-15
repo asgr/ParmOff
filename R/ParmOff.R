@@ -1,7 +1,8 @@
 ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
                    .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL,
                    .quote = TRUE, .envir = parent.frame(), .pass_dots = TRUE,
-                   .return = 'func', .check = TRUE, .bound_raw = TRUE, .log_type = 'log10', ...){
+                   .return = 'func', .check = TRUE, .bound_raw = TRUE, .log_type = 'log10',
+                   .clash = 'first', ...){
   if(.check){
     assert_function(.func)
     assert(
@@ -38,7 +39,7 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     assert_flag(.bound_raw)
     assert_choice(.log_type, c('log10', 'ln', 'log2'))
   }
-  
+
   if(!is.list(.args)){
     .args = as.list(.args)
   }
@@ -63,12 +64,12 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
 
   # arg_names computed after dot-merging so it reflects the full argument set
   arg_names = names(.args)
-  
+
   if(.bound_raw){ #apply bounds before we de_log
     if(!is.null(.lower)){
       .args = ParmLimLo(.args, .lower)
     }
-    
+
     if(!is.null(.upper)){
       .args = ParmLimHi(.args, .upper)
     }
@@ -80,17 +81,17 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     }
     .args = ParmUnLog(.args, .logged)
   }
-  
+
   if(!.bound_raw){ #apply bounds after we de_log
     if(!is.null(.lower)){
       .args = ParmLimLo(.args, .lower)
     }
-    
+
     if(!is.null(.upper)){
       .args = ParmLimHi(.args, .upper)
     }
   }
-  
+
   if(length(.args) > 0){
     if(!is.null(.use_args)){
       .args = .args[arg_names %in% .use_args]
@@ -105,17 +106,30 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     .func_formals = names(formals(.func, envir=.envir))
     if(!'...' %in% .func_formals || !.pass_dots){
       .args = .args[arg_names %in% .func_formals]
+      arg_names = names(.args)
+    }
+
+    if(anyDuplicated(arg_names) && .clash != 'nothing'){
+      if(.clash == 'first'){
+        fromLast = FALSE
+      }else if(.clash == 'last'){
+        fromLast = TRUE
+      }else{
+        stop('.clash must be one of first / last / nothing')
+      }
+      .args = .args[!duplicated(arg_names, fromLast=fromLast)]
+      arg_names = names(.args)
     }
   }
 
   if(.return == 'function' | .return=='func'){
     return(do.call(what=.func, args=.args, quote=.quote, envir=.envir))
   }else if(.return == 'args' | .return=='arg'){
-    return(list(current_args = .args, ignore_args = input_args[! names(input_args) %in% names(.args)]))
+    return(list(current_args = .args, ignore_args = input_args[! names(input_args) %in% arg_names]))
   }else if(.return == 'func_args' | .return=='func_arg'){
     output = list(
       func_out = do.call(what=.func, args=.args, quote=.quote, envir=.envir),
-      args_out = list(current_args = .args, ignore_args = input_args[! names(input_args) %in% names(.args)])
+      args_out = list(current_args = .args, ignore_args = input_args[! names(input_args) %in% arg_names])
     )
   }else{
     stop('return must be one of func / args / func_args!')
