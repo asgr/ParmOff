@@ -38,6 +38,7 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     assert_choice(.return, c('func', 'function', 'args', 'arg', 'func_args', 'func_arg'))
     assert_flag(.bound_raw)
     assert_choice(.log_type, c('log10', 'ln', 'log2'))
+    assert_choice(.clash, c('first', 'last', 'nothing'))
   }
 
   if(!is.list(.args)){
