@@ -41,6 +41,14 @@
   invisible(NULL)
 }
 
+.invert_log_type = function(log_type){
+  switch(log_type,
+         'log10' = '10^x',
+         'ln'    = 'exp(x)',
+         'log2'  = '2^x'
+  )
+}
+
 ParmLog = function(x, logged, log_type = 'log10', verbose = FALSE) {
   log_fun = switch(log_type,
     'log10' = log10,
@@ -61,6 +69,6 @@ ParmUnLog = function(x, logged, log_type = 'log10', verbose = FALSE) {
     stop("log_type must be 'log10', 'ln' or 'log2'")
   )
   result = .ParmLogApply(x, logged, log_fun)
-  if (verbose) .ParmLogVerbose(x, result, logged, paste0('ParmUnLog (', log_type, ')'))
+  if (verbose) .ParmLogVerbose(x, result, logged, paste0('ParmUnLog (', .invert_log_type(log_type), ')'))
   result
 }

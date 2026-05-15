@@ -122,10 +122,10 @@ ParmOff(model_ex, input)
 ParmOff(model_ex, input, .logged='y')
 
 #Bound argument values before passing:
-ParmOff(model_ex, input, .lower=c(x=0, y=0.5), .upper=c(y=1.5, z=2))
+ParmOff(model_ex, input, .lower=list(x=0, y=0.5), .upper=list(y=1.5, z=2))
 
 #Bounding happens before de-logging, so bounds are in log10 space:
-ParmOff(model_ex, input, .logged='y', .lower=c(y=0), .upper=c(y=1))
+ParmOff(model_ex, input, .logged='y', .lower=list(y=0), .upper=list(y=1))
 
 #Truth in advertising, because of the extra checking ParmOff slows down fast functions:
 
