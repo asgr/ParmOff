@@ -11,8 +11,7 @@
       x[sel] = lapply(x[sel], log_fun)
     }
   }
-
-  x
+  return(x)
 }
 
 ParmLog = function(x, logged, log_type = 'log10') {
