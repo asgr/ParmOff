@@ -19,7 +19,7 @@
     sel_idx = which(logged)
     nms = names(before)
     for (i in sel_idx) {
-      nm = if (!is.null(nms) && i <= length(nms)) nms[i] else paste0('[', i, ']')
+      nm = if (!is.null(nms) && i <= length(before)) nms[i] else paste0('[', i, ']')
       b = before[[i]]
       a = after[[i]]
       if (.is_printable(b)) {
