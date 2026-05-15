@@ -2,7 +2,7 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
                    .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL,
                    .quote = TRUE, .envir = parent.frame(), .pass_dots = TRUE,
                    .return = 'func', .check = TRUE, .bound_raw = TRUE, .log_type = 'log10',
-                   .clash = 'first', ...){
+                   .clash = 'first', .verbose = FALSE, ...){
   if(.check){
     assert_function(.func)
     assert(
@@ -45,7 +45,7 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
     .args = as.list(.args)
   }
 
-  if(.return %in% c('args', 'arg', 'func_args', 'func_arg')){
+  if(.verbose || .return %in% c('args', 'arg', 'func_args', 'func_arg')){
     input_args = .args
   }
 
@@ -121,6 +121,11 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
       .args = .args[!duplicated(arg_names, fromLast=fromLast)]
       arg_names = names(.args)
     }
+  }
+
+  if(.verbose){
+    message('Used arguments:\n', paste(arg_names, collapse=' '),
+            '\n\nIgnored arguments:\n', paste(names(input_args)[! names(input_args) %in% arg_names], collapse=' '))
   }
 
   if(.return == 'function' | .return=='func'){

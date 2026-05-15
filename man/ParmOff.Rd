@@ -11,7 +11,7 @@ Simple interface to allow the user to pass complex lists of arguments into funct
 ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
   .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL, .quote = TRUE,
   .envir = parent.frame(), .pass_dots = TRUE, .return = 'func', .check = TRUE,
-  .bound_raw = TRUE, .log_type = 'log10', .clash = 'first', ...)
+  .bound_raw = TRUE, .log_type = 'log10', .clash = 'first', .verbose = FALSE, ...)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -63,6 +63,9 @@ Character scalar. Use \code{'log10'} (default) for base-10 transformations
 }
   \item{.clash}{
 Character scalar; what to do if multiple \option{.args} have the same name. Since this is generally not allowed when passing arguments into a function, you generally either want to take the 'first' (default) or 'last' option. There is also the option to do 'nothing', which is mainly for de-bugging purposes. Note \dots are only used if their names do not clash with the initial provided \option{.args}, i.e. the latter always takes priority if there is a clash (no matter the setting of \option{.clash}.
+}
+  \item{.verbose}{
+Logical; if TRUE it will print to screen the names of the used and ignored arguments, if FALSE then no verbose output is printed (unless by the called function itself).
 }
   \item{\dots}{
 Other arguments to be merged with \option{.args} and processed as discussed above. Note \dots are only used if their names do not clash with the initial provided \option{.args}, i.e. the latter always takes priority if there is a clash (no matter the setting of \option{.clash}.
