@@ -10,9 +10,9 @@ Flexible lower/upper limiting for vectors and lists
 Helper functions to apply lower and upper limits to vectors or lists (including nested lists). These are used internally by \code{\link{ParmOff}}, but can also be used directly for generic list-processing workflows.
 }
 \usage{
-ParmLimLo(x, lower)
-ParmLimHi(x, upper)
-ParmLimBoth(x, lower, upper)
+ParmLimLo(x, lower, verbose = FALSE)
+ParmLimHi(x, upper, verbose = FALSE)
+ParmLimBoth(x, lower, upper, verbose = FALSE)
 }
 \arguments{
   \item{x}{
@@ -23,6 +23,9 @@ Lower limit specification. Can be scalar/vector-like, or list-like to mirror all
 }
   \item{upper}{
 Upper limit specification. Can be scalar/vector-like, or list-like to mirror all or part of \option{x}. Named list elements are matched by name where available. If \option{x} is a list and \option{upper} is vector then \option{upper} is applied to all list elements. Almost always if \option{x} is named list then \option{upper} should also be a named list (potentially just a subset).
+}
+  \item{verbose}{
+Logical; if TRUE, prints a message for each element where a limit actually changes the value. The message shows the parameter name and its before/after values. Output is only printed for elements that are simple scalars, vectors of length \eqn{\le 20}, or matrices of size \eqn{\le 10 \times 10}. Default is FALSE.
 }
 }
 \details{
@@ -69,6 +72,15 @@ list bound has no meaning at a scalar leaf.
 
   \item \strong{Bound is a list}: ignored; \code{x} is returned unchanged.
 }
+
+\strong{Verbose output}
+
+When \code{verbose = TRUE}, a \code{\link{message}} is emitted for each named
+top-level element of \code{x} that is actually changed by the limiting
+operation. The message shows the element name and its before and after values.
+To keep output readable, verbose output is suppressed for elements that are
+atomic vectors longer than 20 or matrices larger than \eqn{10 \times 10}.
+Unnamed or deeply nested structures are not reported at sub-list level.
 }
 \value{
 An object with the same overall structure as \code{x}, with limits applied where possible.
@@ -119,7 +131,22 @@ ParmLimLo(x, lower = list(a = 0))   # a=0, b=5
 ParmLimLo(x, lower = 0)    # a=0,  b=5
 
 # -----------------------------------------------------------------------
-# 3.  Nested list (2 levels)
+# 3.  Verbose output for debugging
+# -----------------------------------------------------------------------
+
+# Print before/after values when clamping actually changes something
+ParmLimLo(list(a = -1, b = 5), lower = list(a = 0), verbose = TRUE)
+# Message emitted (multi-line):
+#   Lower limit imposed on 'a'
+#     before: -1
+#     after:  0
+# 'b' is not reported because it is already above its lower bound
+
+ParmLimBoth(list(x = -2, y = 15), lower = list(x = 0), upper = list(y = 10),
+            verbose = TRUE)
+
+# -----------------------------------------------------------------------
+# 4.  Nested list (2 levels)
 # -----------------------------------------------------------------------
 
 x <- list(a = -1, b = list(c = 5, d = -3), e = 9)
@@ -135,7 +162,7 @@ ParmLimHi(x, upper = list(b = list(c = 4), e = 8))
 ParmLimLo(x, lower = 0)   # a=0, b$c=5 (already >=0), b$d=0, e=9
 
 # -----------------------------------------------------------------------
-# 4.  Deeply nested list (3 levels)
+# 5.  Deeply nested list (3 levels)
 # -----------------------------------------------------------------------
 
 deep <- list(p = list(q = list(r = -5, s = 20), t = 3), u = -1)
@@ -153,7 +180,7 @@ ParmLimBoth(deep, lower = lower, upper = upper)
 ParmLimBoth(deep, lower = 0, upper = 10)
 
 # -----------------------------------------------------------------------
-# 5.  ParmOff integration
+# 6.  ParmOff integration
 # -----------------------------------------------------------------------
 
 model <- function(x, y, z) x + y + z
@@ -162,5 +189,11 @@ model <- function(x, y, z) x + y + z
 ParmOff(model, list(x = -1, y = 20, z = 3),
         .lower = list(x = 0, y = 0),
         .upper = list(y = 10))
-# x: 0, y: 10, z: 3  → sum = 13
+# x: 0, y: 10, z: 3  -> sum = 13
+
+# With verbose output showing what was clamped
+ParmOff(model, list(x = -1, y = 20, z = 3),
+        .lower = list(x = 0, y = 0),
+        .upper = list(y = 10),
+        .verbose = TRUE)
 }

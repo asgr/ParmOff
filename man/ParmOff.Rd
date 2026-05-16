@@ -28,10 +28,10 @@ Character vector; arguments in \option{.args} and \dots will be restricted to th
 Character vector; arguments in \option{.args} and \dots will have these arguments removed. The name/s provided should be as per post-stripped (if \option{.strip} is provided).
 }
   \item{.lower}{
-Lower limit specification. Can be scalar/vector-like, or list-like to mirror all or part of \option{.args}. Named list elements are matched by name where available. If \option{.args} is a list and \option{lower} is vector then \option{lower} is applied to all list elements. Almost always if \option{.args} is named list then \option{lower} should also be a named list (potentially just a subset).
+Numeric list/vector; a list can be all or part of \option{.args}, a vector will be coerced to a list. Named elements are matched by name where available and the specified lower limit applied. This is deliberately more restrictive in use than the lower level \code{\link{ParmLim}} functions.
 }
   \item{.upper}{
-Upper limit specification. Can be scalar/vector-like, or list-like to mirror all or part of \option{.args}. Named list elements are matched by name where available. If \option{.args} is a list and \option{upper} is vector then \option{upper} is applied to all list elements. Almost always if \option{.args} is named list then \option{upper} should also be a named list (potentially just a subset).
+Numeric list/vector; a list can be all or part of \option{.args}, a vector will be coerced to a list. Named elements are matched by name where available and the specified upper limit applied. This is deliberately more restrictive in use than the lower level \code{\link{ParmLim}} functions.
 }
   \item{.logged}{
 Character/logical vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name/s provided should be as per post-stripped (if \option{.strip} is provided). If providing a logical vector it must also be exactly the same length as \option{.args}. We deliberately do not allow just a positional (which-like) integer vector because it is very easy to create subtle bugs.
@@ -65,7 +65,7 @@ Character scalar. Use \code{'log10'} (default) for base-10 transformations
 Character scalar; what to do if multiple \option{.args} have the same name. Since this is generally not allowed when passing arguments into a function, you generally either want to take the 'first' (default) or 'last' option. There is also the option to do 'nothing', which is mainly for de-bugging purposes. Note \dots are only used if their names do not clash with the initial provided \option{.args}, i.e. the latter always takes priority if there is a clash (no matter the setting of \option{.clash}.
 }
   \item{.verbose}{
-Logical; if TRUE it will print to screen the names of the used and ignored arguments, if FALSE then no verbose output is printed (unless by the called function itself).
+Logical; if TRUE it will print to screen the names of the used and ignored arguments, and also forwards the flag to \code{\link{ParmLimLo}}, \code{\link{ParmLimHi}}, and \code{\link{ParmUnLog}} so that lower/upper limit clamping and de-logging operations report the parameter name and its before/after values. Output is only printed for elements that are simple scalars, vectors of length \eqn{\le 20}, or matrices of size \eqn{\le 10 \times 10}. If FALSE then no verbose output is printed (unless by the called function itself).
 }
   \item{\dots}{
 Other arguments to be merged with \option{.args} and processed as discussed above. Note \dots are only used if their names do not clash with the initial provided \option{.args}, i.e. the latter always takes priority if there is a clash (no matter the setting of \option{.clash}.
@@ -122,10 +122,10 @@ ParmOff(model_ex, input)
 ParmOff(model_ex, input, .logged='y')
 
 #Bound argument values before passing:
-ParmOff(model_ex, input, .lower=c(x=0, y=0.5), .upper=c(y=1.5, z=2))
+ParmOff(model_ex, input, .lower=list(x=0, y=0.5), .upper=list(y=1.5, z=2))
 
 #Bounding happens before de-logging, so bounds are in log10 space:
-ParmOff(model_ex, input, .logged='y', .lower=c(y=0), .upper=c(y=1))
+ParmOff(model_ex, input, .logged='y', .lower=list(y=0), .upper=list(y=1))
 
 #Truth in advertising, because of the extra checking ParmOff slows down fast functions:
 
