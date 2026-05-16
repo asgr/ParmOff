@@ -533,7 +533,7 @@ ParmOff(model,
 #   x y z
 #
 #   Ignored arguments:
-#   (empty — all arguments were used)
+# (blank — no ignored args)
 # Result: 0 * 10 + 10 = 10
 ```
 

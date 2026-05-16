@@ -4,6 +4,9 @@
   }
 
   if (is.logical(logged)) {
+    if (length(logged) != length(x)) {
+      stop('logged logical vector must be the same length as x (got ', length(logged), ' vs ', length(x), ')')
+    }
     x[logged] = lapply(x[logged], log_fun)
   } else if (is.character(logged) && !is.null(names(x))) {
     sel = names(x) %in% logged
@@ -19,22 +22,20 @@
     sel_idx = which(logged)
     nms = names(before)
     for (i in sel_idx) {
-      nm = if (!is.null(nms) && i <= length(before)) nms[i] else paste0('[', i, ']')
+      nm = if (!is.null(nms)) nms[i] else paste0('[', i, ']')
       b = before[[i]]
-      a = after[[i]]
       if (.is_printable(b)) {
         message(operation, " applied to '", nm, "'\n  before: ", .format_val(b),
-                '\n  after:  ', .format_val(a))
+                '\n  after:  ', .format_val(after[[i]]))
       }
     }
   } else if (is.character(logged) && !is.null(names(before))) {
     sel = names(before)[names(before) %in% logged]
     for (nm in sel) {
       b = before[[nm]]
-      a = after[[nm]]
       if (.is_printable(b)) {
         message(operation, " applied to '", nm, "'\n  before: ", .format_val(b),
-                '\n  after:  ', .format_val(a))
+                '\n  after:  ', .format_val(after[[nm]]))
       }
     }
   }
