@@ -23,18 +23,18 @@
     nms = names(before)
     for (i in sel_idx) {
       nm = if (!is.null(nms)) nms[i] else paste0('[', i, ']')
-      b = before[[i]]
-      if (.is_printable(b)) {
-        message(operation, " applied to '", nm, "'\n  before: ", .format_val(b),
+      bef_sel = before[[i]]
+      if (.is_printable(bef_sel)) {
+        message(operation, " applied to '", nm, "'\n  before: ", .format_val(bef_sel),
                 '\n  after:  ', .format_val(after[[i]]))
       }
     }
   } else if (is.character(logged) && !is.null(names(before))) {
     sel = names(before)[names(before) %in% logged]
     for (nm in sel) {
-      b = before[[nm]]
-      if (.is_printable(b)) {
-        message(operation, " applied to '", nm, "'\n  before: ", .format_val(b),
+      bef_sel = before[[nm]]
+      if (.is_printable(bef_sel)) {
+        message(operation, " applied to '", nm, "'\n  before: ", .format_val(bef_sel),
                 '\n  after:  ', .format_val(after[[nm]]))
       }
     }
