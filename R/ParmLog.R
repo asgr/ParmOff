@@ -5,7 +5,7 @@
 
   if (is.logical(logged)) {
     if (length(logged) != length(x)) {
-      stop('logged logical vector must be the same length as x (got ', length(logged), ' vs ', length(x), ')')
+      stop('Length of logical vector \'logged\' must match length of \'x\' (expected ', length(x), ', got ', length(logged), ')')
     }
     x[logged] = lapply(x[logged], log_fun)
   } else if (is.character(logged) && !is.null(names(x))) {
