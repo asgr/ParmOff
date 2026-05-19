@@ -43,7 +43,8 @@ Processing steps happen in this fixed order:
 6. Remove named arguments (`.rem_args`).
 7. Drop arguments not in the function's formals unless the function accepts
    `...` and `.pass_dots = TRUE`.
-8. Call the function or return the processed argument list (`.return`).
+8. Optionally add functional argument constraints with `.constrain`.
+9. Call the function or return the processed argument list (`.return`).
 
 ---
 
@@ -315,7 +316,30 @@ out$cov   # still a 2×2 matrix, values are log10 of originals
 
 ---
 
-## 7  Real-world example: fitting a Normal distribution with `optim`
+## 7 Functional argument constraints
+
+Sometimes it is necessary to apply additional constraints to input arguments. This is
+especially true when they represent parameters with phsyical relationship, like property
+`y` always has to be double `y`:
+
+```{r}
+model_ex = function(x,y,z){x * y + z}
+input = c(x=1, y=2, z=3)
+
+ParmOff(model_ex, input, .logged='y', .lower=list(y=0), .upper=list(y=1), .return='args')
+
+#Make y constrained to be 2*x:
+constrain_func = function(x, y, z){list(x=x, y = 2 * x, z=z)}
+ParmOff(model_ex, input, .logged='y', .lower=list(y=0), .upper=list(y=1),
+  .constrain=constrain_func, .return='args')
+```
+
+Note how `y` goes from being 10 to being 2. Constraints are executed as the very last
+act before our target function (`.func`) is called.
+
+---
+
+## 8  Real-world example: fitting a Normal distribution with `optim`
 
 A common pattern is to fit a parametric model using `optim`.  The parameter
 vector passed to the objective function needs to be forwarded cleanly to the
@@ -358,7 +382,7 @@ cat("Log-likelihood at fitted parameters:", round(ll_val, 2), "\n")
 
 ---
 
-## 8  Complex example: multi-component galaxy surface-brightness fitting
+## 9  Complex example: multi-component galaxy surface-brightness fitting
 
 A realistic scientific use case: fitting a galaxy image with a multi-component
 model where different parameters have different transformations and constraints.
@@ -466,7 +490,7 @@ Key points illustrated:
 
 ---
 
-## 9  Using `.return = 'args'` for debugging
+## 10  Using `.return = 'args'` for debugging
 
 When things go wrong it is useful to inspect exactly which arguments `ParmOff`
 would pass.
@@ -487,7 +511,7 @@ print(result$ignore_args)
 
 ---
 
-## 10  Verbose debugging (`.verbose`)
+## 11  Verbose debugging (`.verbose`)
 
 Setting `.verbose = TRUE` activates diagnostic output at three levels:
 
@@ -572,7 +596,7 @@ code (`suppressMessages(...)`) or capture for logging
 
 ---
 
-## 11  Performance note
+## 12  Performance note
 
 For trivially fast functions, `ParmOff`'s bookkeeping adds measurable overhead.
 It is designed for functions that take at least tens of milliseconds to run.
@@ -597,7 +621,7 @@ system.time(for (i in 1:1e4) ParmOff(model, arg_list, .check = FALSE))
 
 ---
 
-## 12  Quick-reference table
+## 13  Quick-reference table
 
 | Parameter | Type | Purpose |
 |-----------|------|---------|
@@ -610,6 +634,7 @@ system.time(for (i in 1:1e4) ParmOff(model, arg_list, .check = FALSE))
 | `.upper` | named numeric / list | Upper bounds per argument |
 | `.bound_raw` | logical | Apply bounds before (`TRUE`) or after (`FALSE`) de-logging |
 | `.logged` | character or logical vector | Arguments stored in log₁₀ space (character: match by name; logical: TRUE positions de-logged; must equal `length(.args)`); see also `ParmUnLog` |
+| `.constrain` | a function to achieve additional argument constraints |
 | `.pass_dots` | logical | Pass unmatched args through `...` in `.func` |
 | `.return` | `'function'`\|`'args'` | Return call result or processed argument list |
 | `.check` | logical | Enable/disable checkmate input validation |

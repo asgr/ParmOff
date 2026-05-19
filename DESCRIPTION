@@ -1,8 +1,8 @@
 Package: ParmOff
 Type: Package
 Title: Complex Argument Matching
-Version: 1.0.1
-Date: 2026-05-18
+Version: 1.0.2
+Date: 2026-05-19
 Authors@R: person(given = "Aaron",
                       family = "Robotham",
                       role = c("aut", "cre"),

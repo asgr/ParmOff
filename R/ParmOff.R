@@ -1,6 +1,6 @@
 ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
-                   .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL,
-                   .quote = TRUE, .envir = parent.frame(), .pass_dots = TRUE,
+                   .lower = NULL, .upper = NULL, .logged = NULL, .constrain = NULL,
+                   .strip = NULL, .quote = TRUE, .envir = parent.frame(), .pass_dots = TRUE,
                    .return = 'func', .check = TRUE, .bound_raw = TRUE, .log_type = 'log10',
                    .clash = 'first', .verbose = FALSE, ...){
   if(.check){
@@ -127,6 +127,11 @@ ParmOff = function(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
   if(.verbose){
     message('Used arguments:\n', paste(arg_names, collapse=' '),
             '\n\nIgnored arguments:\n', paste(names(input_args)[! names(input_args) %in% arg_names], collapse=' '))
+  }
+
+  if(!is.null(.constrain)){
+    .args = do.call(what=.constrain, args=.args, quote=.quote, envir=.envir)
+    arg_names = names(.args)
   }
 
   if(.return == 'function' | .return=='func'){

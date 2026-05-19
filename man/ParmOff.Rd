@@ -8,8 +8,8 @@ Powerful Parameter Passing
 Simple interface to allow the user to pass complex lists of arguments into functions, with matching and mis-matching rules.
 }
 \usage{
-ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL,
-  .lower = NULL, .upper = NULL, .logged = NULL, .strip = NULL, .quote = TRUE,
+ParmOff(.func, .args = NULL, .use_args = NULL, .rem_args = NULL, .lower = NULL,
+  .upper = NULL, .logged = NULL, .constrain = NULL, .strip = NULL, .quote = TRUE,
   .envir = parent.frame(), .pass_dots = TRUE, .return = 'func', .check = TRUE,
   .bound_raw = TRUE, .log_type = 'log10', .clash = 'first', .verbose = FALSE, ...)
 }
@@ -35,6 +35,9 @@ Numeric list/vector; a list can be all or part of \option{.args}, a vector will 
 }
   \item{.logged}{
 Character/logical vector; logged arguments in \option{.args} and \dots. These will be unlogged (using base 10), so only specify if this action is desired. The name/s provided should be as per post-stripped (if \option{.strip} is provided). If providing a logical vector it must also be exactly the same length as \option{.args}. We deliberately do not allow just a positional (which-like) integer vector because it is very easy to create subtle bugs.
+}
+  \item{.constrain}{
+Function; an optional final intervention on the arguments run immediately before the \option{.func} evaluation. The input to this function is a list of all the arugments that will be pass into \option{.func}, and the output must be all the arguments you want to pass but with any user specific constraints applied. This is really for advanced users. An example of when you might use it would be if you know parameter \option{y} always has to be double \option{x} (see Examples), and if limits have been applied this relationship might break down. Given \option{.constrain} is executed last, you also need to be careful to obey any limits required.
 }
   \item{.strip}{
 Character vector; a string element to strip out of all \option{.args} names. This intervention happens first.
@@ -79,12 +82,13 @@ These events happen in this exact order:
   \item If \option{.args} and \dots are both present then any arguments in \dots that match by name are removed (\option{.args} takes precedence).
   \item Merge \option{.args} and \dots into one list (current_args).
   \item If \option{.bound_raw} is TRUE (default): if \option{.lower} is provided, clamp named current_args to the specified minimum values; if \option{.upper} is provided, clamp to the specified maximum values.
-  \item current_args has named elements specified by \option{.logged} unlogged (using base 10).
+  \item current_args has named elements specified by \option{.logged} unlogged (using base \option{log_type}, base 10 by default).
   \item If \option{.bound_raw} is FALSE: if \option{.lower} is provided, clamp named current_args to the specified minimum values; if \option{.upper} is provided, clamp to the specified maximum values.
   \item If \option{.use_args} is present then restrict current_args to these arguments.
   \item If \option{.rem_args} is present then remove these arguments from current_args.
   \item If \dots are not present in the arguments of \option{.func} or \option{.pass_dots}=FALSE then restrict the current_args list to only those arguments that appear in the \code{\link{formals}} of \option{.func}.
   \item If there are any name clashes in the remaining current_args then disambiguate using the setting of \option{.clash}.
+  \item If \option{.constrain} is provided apply additional constraints as specified by that function.
   \item Return the output of \code{\link{do.call}} or the current_args (depending on the setting of \option{.return}.
 }
 
@@ -126,6 +130,11 @@ ParmOff(model_ex, input, .lower=list(x=0, y=0.5), .upper=list(y=1.5, z=2))
 
 #Bounding happens before de-logging, so bounds are in log10 space:
 ParmOff(model_ex, input, .logged='y', .lower=list(y=0), .upper=list(y=1))
+
+#Make y constrained to be 2*x:
+constrain_func = function(x, y, z){list(x=x, y = 2 * x, z=z)}
+ParmOff(model_ex, input, .logged='y', .lower=list(y=0), .upper=list(y=1),
+  .constrain=constrain_func)
 
 #Truth in advertising, because of the extra checking ParmOff slows down fast functions:
 
