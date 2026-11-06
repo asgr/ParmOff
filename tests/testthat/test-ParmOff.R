@@ -632,3 +632,33 @@ test_that("passing same arg in both .use_args and .rem_args removes it (rem afte
   # .use_args keeps only 'x'; then .rem_args removes 'x' -> empty -> f_none
   expect_equal(ParmOff(f_none, list(x=1,y=2), .use_args="x", .rem_args="x"), 42L)
 })
+
+test_that(".return='func_args' returns the result and argument details", {
+  result <- ParmOff(
+    function(x) x * 2,
+    list(x = 3, unused = 4),
+    .return = "func_args"
+  )
+
+  expect_equal(result$func_out, 6)
+  expect_equal(result$args_out$current_args, list(x = 3))
+  expect_equal(result$args_out$ignore_args, list(unused = 4))
+})
+
+test_that(".constrain transforms arguments before calling the function", {
+  result <- ParmOff(
+    function(x) x,
+    list(x = 10),
+    .constrain = function(x) list(x = min(x, 5))
+  )
+
+  expect_equal(result, 5)
+})
+
+test_that(".clash selects the first or last duplicate argument", {
+  f <- function(x) x
+  args <- list(x = 1, x = 2)
+
+  expect_equal(ParmOff(f, args, .clash = "first"), 1)
+  expect_equal(ParmOff(f, args, .clash = "last"), 2)
+})
