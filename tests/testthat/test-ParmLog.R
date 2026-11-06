@@ -367,3 +367,23 @@ test_that("ParmLog verbose suppresses output for large vectors", {
   x_long <- list(scale = seq_len(25))  # length 25 > 20
   expect_silent(ParmLog(x_long, logged = "scale", verbose = TRUE))
 })
+
+test_that("ParmLog verbose handles unnamed logical selection", {
+  expect_message(
+    ParmLog(list(100, 10), logged = c(TRUE, FALSE), verbose = TRUE),
+    regexp = "ParmLog.*\\[1\\]"
+  )
+})
+
+test_that("ParmUnLog verbose reports the inverse natural-log operation", {
+  expect_message(
+    ParmUnLog(list(a = 2), logged = "a", log_type = "ln", verbose = TRUE),
+    regexp = "exp\\(x\\)"
+  )
+})
+
+test_that("unsupported logged selectors leave values unchanged", {
+  x <- list(a = 100)
+
+  expect_identical(ParmLog(x, logged = 1, verbose = TRUE), x)
+})

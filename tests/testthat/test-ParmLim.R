@@ -391,3 +391,20 @@ test_that("ParmOff .verbose passes to ParmLimHi", {
     regexp = "Upper limit.*x"
   )
 })
+
+test_that("NULL bound leaves nested input unchanged", {
+  x <- list(a = list(b = -1))
+
+  expect_identical(ParmLimLo(x, lower = NULL), x)
+  expect_identical(ParmLimHi(x, upper = NULL), x)
+})
+
+test_that("verbose limiting handles unnamed lists and matrices", {
+  expect_silent(ParmLimLo(list(-1, 2), lower = 0, verbose = TRUE))
+
+  m <- matrix(c(-1, 2, -3, 4), nrow = 2)
+  expect_message(
+    ParmLimLo(m, lower = 0, verbose = TRUE),
+    regexp = "before:.*\\["
+  )
+})
